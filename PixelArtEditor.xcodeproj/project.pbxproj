@@ -26,6 +26,8 @@
 		A1000011 /* FrameTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* FrameTimelineView.swift */; };
 		A1000012 /* GIFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012 /* GIFExporter.swift */; };
 		A1000013 /* SpriteSheetExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* SpriteSheetExporter.swift */; };
+		A1000014 /* ProjectData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014 /* ProjectData.swift */; };
+		A1000015 /* ProjectFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000015 /* ProjectFileManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -48,6 +50,8 @@
 		A2000011 /* FrameTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameTimelineView.swift; sourceTree = "<group>"; };
 		A2000012 /* GIFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFExporter.swift; sourceTree = "<group>"; };
 		A2000013 /* SpriteSheetExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSheetExporter.swift; sourceTree = "<group>"; };
+		A2000014 /* ProjectData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectData.swift; sourceTree = "<group>"; };
+		A2000015 /* ProjectFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFileManager.swift; sourceTree = "<group>"; };
 		A3000001 /* PixelArtEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PixelArtEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -111,6 +115,7 @@
 				A200000C /* PNGExporter.swift */,
 				A2000012 /* GIFExporter.swift */,
 				A2000013 /* SpriteSheetExporter.swift */,
+				A2000015 /* ProjectFileManager.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -132,6 +137,7 @@
 				A200000D /* CharacterTemplates.swift */,
 				A200000F /* CanvasStore.swift */,
 				A2000010 /* AnimationStore.swift */,
+				A2000014 /* ProjectData.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -218,6 +224,8 @@
 				A1000011 /* FrameTimelineView.swift in Sources */,
 				A1000012 /* GIFExporter.swift in Sources */,
 				A1000013 /* SpriteSheetExporter.swift in Sources */,
+				A1000014 /* ProjectData.swift in Sources */,
+				A1000015 /* ProjectFileManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
