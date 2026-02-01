@@ -6,6 +6,7 @@ struct TopBarView: View {
     @Binding var redoTrigger: Int
     @Binding var templateGrid: PixelGrid?
     @ObservedObject var canvasStore: CanvasStore
+    @ObservedObject var animationStore: AnimationStore
     @State private var showExportMenu = false
     @State private var showSaveAlert = false
     @State private var saveSuccess = false
@@ -59,19 +60,22 @@ struct TopBarView: View {
 
             // Export
             Menu {
-                Button("Save PNG (1x)") {
-                    exportPNG(scale: 1)
-                }
-                Button("Save PNG (4x)") {
-                    exportPNG(scale: 4)
-                }
-                Button("Save PNG (8x)") {
-                    exportPNG(scale: 8)
+                ForEach([1, 4, 8, 16, 32], id: \.self) { s in
+                    Button("Save PNG (\(s)x — \(gridSize * s)×\(gridSize * s))") {
+                        exportPNG(scale: s)
+                    }
                 }
                 Button("Copy to Clipboard") {
                     if let cv = canvasStore.canvasView {
                         PNGExporter.copyToClipboard(grid: cv.grid, scale: 4)
                     }
+                }
+                Divider()
+                Button("Export GIF") {
+                    exportGIF()
+                }
+                Button("Export Sprite Sheet") {
+                    exportSpriteSheet()
                 }
             } label: {
                 Image(systemName: "square.and.arrow.up")
@@ -89,6 +93,30 @@ struct TopBarView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(saveSuccess ? "Image saved to Photos." : saveError.isEmpty ? "Unknown error" : saveError)
+        }
+    }
+
+    private func exportGIF() {
+        if let cv = canvasStore.canvasView {
+            animationStore.syncCurrentFrameFromCanvas(cv)
+        }
+        let grids = animationStore.frames.map { $0.grid }
+        GIFExporter.saveToPhotos(frames: grids, fps: animationStore.fps, scale: 4) { success, error in
+            saveError = error ?? ""
+            saveSuccess = success
+            showSaveAlert = true
+        }
+    }
+
+    private func exportSpriteSheet() {
+        if let cv = canvasStore.canvasView {
+            animationStore.syncCurrentFrameFromCanvas(cv)
+        }
+        let grids = animationStore.frames.map { $0.grid }
+        SpriteSheetExporter.saveToPhotos(frames: grids, scale: 4) { success, error in
+            saveError = error ?? ""
+            saveSuccess = success
+            showSaveAlert = true
         }
     }
 

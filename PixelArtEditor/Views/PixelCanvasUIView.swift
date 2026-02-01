@@ -15,6 +15,7 @@ class PixelCanvasUIView: UIView {
 
     var currentColor: UIColor = .black
     var currentTool: Tool = .pencil
+    var onionSkinGrid: PixelGrid?
 
     // Transform state
     private var canvasScale: CGFloat = 1.0
@@ -133,6 +134,20 @@ class PixelCanvasUIView: UIView {
         delegate?.canvasDidChange()
     }
 
+    func loadGridWithoutUndo(_ newGrid: PixelGrid) {
+        grid = newGrid
+        setNeedsDisplay()
+    }
+
+    func exportUndoState() -> (undo: [PixelGrid], redo: [PixelGrid]) {
+        return (undoStack, redoStack)
+    }
+
+    func importUndoState(undoStack: [PixelGrid], redoStack: [PixelGrid]) {
+        self.undoStack = undoStack
+        self.redoStack = redoStack
+    }
+
     // MARK: - Coordinate conversion
 
     private var cellSize: CGFloat {
@@ -177,6 +192,20 @@ class PixelCanvasUIView: UIView {
         checkerPattern?.setFill()
         ctx.fill(gridRect)
         ctx.restoreGState()
+
+        // Onion skin (previous frame at 25% opacity)
+        if let onion = onionSkinGrid {
+            for row in 0..<onion.height {
+                for col in 0..<onion.width {
+                    if let color = onion[row, col] {
+                        ctx.setFillColor(color.withAlphaComponent(0.25).cgColor)
+                        ctx.fill(CGRect(x: origin.x + CGFloat(col) * cs,
+                                        y: origin.y + CGFloat(row) * cs,
+                                        width: cs, height: cs))
+                    }
+                }
+            }
+        }
 
         // Pixels
         for row in 0..<grid.height {

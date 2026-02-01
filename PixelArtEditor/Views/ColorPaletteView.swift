@@ -5,6 +5,7 @@ struct ColorPaletteView: View {
     @Binding var selectedPaletteIndex: Int
     @State private var showColorPicker = false
     @State private var customColors: [UIColor] = []
+    @State private var recentColors: [UIColor] = []
     @State private var pickerColor: Color = .black
 
     private let palettes = Palette.allPalettes
@@ -27,6 +28,33 @@ struct ColorPaletteView: View {
                     }
                 }
                 .padding(.horizontal, 8)
+            }
+
+            // Recent colors
+            if !recentColors.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 6) {
+                        Text("Recent")
+                            .font(.caption2)
+                            .foregroundColor(.secondary)
+                            .frame(width: 40)
+
+                        ForEach(Array(recentColors.enumerated()), id: \.offset) { _, color in
+                            Button {
+                                selectedColor = color
+                            } label: {
+                                RoundedRectangle(cornerRadius: 4)
+                                    .fill(Color(color))
+                                    .frame(width: 26, height: 26)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 4)
+                                            .stroke(colorsMatch(color, selectedColor) ? Color.white : Color.clear, lineWidth: 2)
+                                    )
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 8)
+                }
             }
 
             // Colors
@@ -56,6 +84,7 @@ struct ColorPaletteView: View {
                     ForEach(Array(currentPalette.colors.enumerated()), id: \.offset) { _, color in
                         Button {
                             selectedColor = color
+                            addToRecent(color)
                         } label: {
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(Color(color))
@@ -74,6 +103,7 @@ struct ColorPaletteView: View {
                         ForEach(Array(customColors.enumerated()), id: \.offset) { index, color in
                             Button {
                                 selectedColor = color
+                                addToRecent(color)
                             } label: {
                                 RoundedRectangle(cornerRadius: 4)
                                     .fill(Color(color))
@@ -105,6 +135,7 @@ struct ColorPaletteView: View {
                 selectedColor: $selectedColor,
                 onColorPicked: { color in
                     addToCustom(color)
+                    addToRecent(color)
                 }
             )
         )
@@ -112,6 +143,15 @@ struct ColorPaletteView: View {
 
     private var currentPalette: Palette {
         palettes[safe: selectedPaletteIndex] ?? palettes[0]
+    }
+
+    private func addToRecent(_ color: UIColor) {
+        // Remove duplicate if exists, then prepend
+        recentColors.removeAll { colorsMatch($0, color) }
+        recentColors.insert(color, at: 0)
+        if recentColors.count > 16 {
+            recentColors.removeLast()
+        }
     }
 
     private func addToCustom(_ color: UIColor) {

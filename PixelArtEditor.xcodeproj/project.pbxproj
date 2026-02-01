@@ -22,6 +22,10 @@
 		A100000D /* CharacterTemplates.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000D /* CharacterTemplates.swift */; };
 		A100000E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A200000E /* Assets.xcassets */; };
 		A100000F /* CanvasStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A200000F /* CanvasStore.swift */; };
+		A1000010 /* AnimationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000010 /* AnimationStore.swift */; };
+		A1000011 /* FrameTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000011 /* FrameTimelineView.swift */; };
+		A1000012 /* GIFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000012 /* GIFExporter.swift */; };
+		A1000013 /* SpriteSheetExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* SpriteSheetExporter.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -40,6 +44,10 @@
 		A200000D /* CharacterTemplates.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CharacterTemplates.swift; sourceTree = "<group>"; };
 		A200000E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A200000F /* CanvasStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasStore.swift; sourceTree = "<group>"; };
+		A2000010 /* AnimationStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnimationStore.swift; sourceTree = "<group>"; };
+		A2000011 /* FrameTimelineView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameTimelineView.swift; sourceTree = "<group>"; };
+		A2000012 /* GIFExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GIFExporter.swift; sourceTree = "<group>"; };
+		A2000013 /* SpriteSheetExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSheetExporter.swift; sourceTree = "<group>"; };
 		A3000001 /* PixelArtEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PixelArtEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -91,6 +99,7 @@
 				A2000005 /* ToolbarView.swift */,
 				A2000006 /* ColorPaletteView.swift */,
 				A2000007 /* TopBarView.swift */,
+				A2000011 /* FrameTimelineView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -100,6 +109,8 @@
 			children = (
 				A200000B /* FloodFill.swift */,
 				A200000C /* PNGExporter.swift */,
+				A2000012 /* GIFExporter.swift */,
+				A2000013 /* SpriteSheetExporter.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -120,6 +131,7 @@
 				A200000A /* Palette.swift */,
 				A200000D /* CharacterTemplates.swift */,
 				A200000F /* CanvasStore.swift */,
+				A2000010 /* AnimationStore.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -202,6 +214,10 @@
 				A100000C /* PNGExporter.swift in Sources */,
 				A100000D /* CharacterTemplates.swift in Sources */,
 				A100000F /* CanvasStore.swift in Sources */,
+				A1000010 /* AnimationStore.swift in Sources */,
+				A1000011 /* FrameTimelineView.swift in Sources */,
+				A1000012 /* GIFExporter.swift in Sources */,
+				A1000013 /* SpriteSheetExporter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

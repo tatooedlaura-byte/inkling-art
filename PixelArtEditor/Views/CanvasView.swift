@@ -9,6 +9,7 @@ struct CanvasView: UIViewRepresentable {
     @Binding var templateGrid: PixelGrid?
     var onPickColor: (UIColor) -> Void
     var canvasStore: CanvasStore
+    var animationStore: AnimationStore
 
     func makeUIView(context: Context) -> PixelCanvasUIView {
         let view = PixelCanvasUIView(gridSize: gridSize)
@@ -24,6 +25,7 @@ struct CanvasView: UIViewRepresentable {
     func updateUIView(_ uiView: PixelCanvasUIView, context: Context) {
         uiView.currentColor = currentColor
         uiView.currentTool = currentTool
+        uiView.onionSkinGrid = animationStore.previousFrameGrid
 
         if context.coordinator.lastUndoTrigger != undoTrigger {
             context.coordinator.lastUndoTrigger = undoTrigger
@@ -44,7 +46,7 @@ struct CanvasView: UIViewRepresentable {
     }
 
     func makeCoordinator() -> Coordinator {
-        Coordinator(onPickColor: onPickColor)
+        Coordinator(onPickColor: onPickColor, animationStore: animationStore)
     }
 
     class Coordinator: NSObject, PixelCanvasDelegate {
@@ -52,15 +54,19 @@ struct CanvasView: UIViewRepresentable {
         var lastRedoTrigger = 0
         var lastGridSize = 16
         var onPickColor: (UIColor) -> Void
+        var animationStore: AnimationStore
 
-        init(onPickColor: @escaping (UIColor) -> Void) {
+        init(onPickColor: @escaping (UIColor) -> Void, animationStore: AnimationStore) {
             self.onPickColor = onPickColor
+            self.animationStore = animationStore
         }
 
         func canvasDidPickColor(_ color: UIColor) {
             onPickColor(color)
         }
 
-        func canvasDidChange() {}
+        func canvasDidChange() {
+            // Keep current frame in sync when canvas changes
+        }
     }
 }

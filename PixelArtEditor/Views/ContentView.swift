@@ -9,6 +9,7 @@ struct ContentView: View {
     @State private var selectedPaletteIndex: Int = 0
     @State private var templateGrid: PixelGrid?
     @StateObject private var canvasStore = CanvasStore()
+    @StateObject private var animationStore = AnimationStore()
 
     var body: some View {
         VStack(spacing: 0) {
@@ -17,7 +18,8 @@ struct ContentView: View {
                 undoTrigger: $undoTrigger,
                 redoTrigger: $redoTrigger,
                 templateGrid: $templateGrid,
-                canvasStore: canvasStore
+                canvasStore: canvasStore,
+                animationStore: animationStore
             )
 
             ZStack(alignment: .leading) {
@@ -33,7 +35,8 @@ struct ContentView: View {
                         currentColor = color
                         currentTool = .pencil
                     },
-                    canvasStore: canvasStore
+                    canvasStore: canvasStore,
+                    animationStore: animationStore
                 )
                 .background(Color(.systemGray6))
 
@@ -42,10 +45,21 @@ struct ContentView: View {
                     .padding(.leading, 12)
             }
 
+            FrameTimelineView(
+                animationStore: animationStore,
+                canvasStore: canvasStore
+            )
+
             ColorPaletteView(
                 selectedColor: $currentColor,
                 selectedPaletteIndex: $selectedPaletteIndex
             )
+        }
+        .onAppear {
+            animationStore.initialize(gridSize: gridSize)
+        }
+        .onChange(of: gridSize) { newSize in
+            animationStore.initialize(gridSize: newSize)
         }
         .ignoresSafeArea(.keyboard)
     }
