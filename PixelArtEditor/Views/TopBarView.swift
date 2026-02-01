@@ -23,8 +23,13 @@ struct TopBarView: View {
         HStack(spacing: 16) {
             // File menu
             Menu {
-                Button("New") {
-                    newProject()
+                Menu("New") {
+                    ForEach(sizes, id: \.self) { size in
+                        Button("\(size)×\(size)") {
+                            gridSize = size
+                            newProject()
+                        }
+                    }
                 }
                 Button("Save…") {
                     projectName = ""
