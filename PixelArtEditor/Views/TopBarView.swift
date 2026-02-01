@@ -15,7 +15,7 @@ struct TopBarView: View {
     @State private var showSaveNameAlert = false
     @State private var projectName = ""
     @State private var showOpenPicker = false
-    @State private var savedProjects: [ProjectFileManager.ProjectInfo] = []
+    @State private var showSavedProjectsSheet = false
 
     private let sizes = [8, 16, 32, 64]
 
@@ -31,13 +31,8 @@ struct TopBarView: View {
                     showSaveNameAlert = true
                 }
                 Divider()
-                if !savedProjects.isEmpty {
-                    ForEach(savedProjects) { project in
-                        Button(project.name) {
-                            openProject(url: project.url)
-                        }
-                    }
-                    Divider()
+                Button("Saved Projects…") {
+                    showSavedProjectsSheet = true
                 }
                 Button("Open File…") {
                     showOpenPicker = true
@@ -52,9 +47,6 @@ struct TopBarView: View {
                 .padding(.vertical, 6)
                 .background(Color(.systemGray5))
                 .cornerRadius(8)
-            }
-            .onAppear {
-                savedProjects = ProjectFileManager.listProjects()
             }
 
             // Grid size picker
@@ -149,6 +141,12 @@ struct TopBarView: View {
                 openProject(url: url)
             }
         }
+        .sheet(isPresented: $showSavedProjectsSheet) {
+            SavedProjectsView { url in
+                showSavedProjectsSheet = false
+                openProject(url: url)
+            }
+        }
     }
 
     private func newProject() {
@@ -165,7 +163,6 @@ struct TopBarView: View {
         let data = ProjectData.from(animationStore: animationStore, canvas: canvasStore.canvasView)
         do {
             _ = try ProjectFileManager.save(data: data, name: name)
-            savedProjects = ProjectFileManager.listProjects()
         } catch {
             saveError = error.localizedDescription
             saveSuccess = false
@@ -250,6 +247,55 @@ struct DocumentPicker: UIViewControllerRepresentable {
         func documentPicker(_ controller: UIDocumentPickerViewController, didPickDocumentsAt urls: [URL]) {
             guard let url = urls.first else { return }
             onPick(url)
+        }
+    }
+}
+
+struct SavedProjectsView: View {
+    let onOpen: (URL) -> Void
+    @Environment(\.dismiss) private var dismiss
+    @State private var projects: [ProjectFileManager.ProjectInfo] = []
+
+    var body: some View {
+        NavigationView {
+            Group {
+                if projects.isEmpty {
+                    Text("No saved projects")
+                        .foregroundColor(.secondary)
+                } else {
+                    List {
+                        ForEach(projects) { project in
+                            Button {
+                                onOpen(project.url)
+                            } label: {
+                                VStack(alignment: .leading) {
+                                    Text(project.name)
+                                        .font(.body)
+                                    Text(project.date, style: .date)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                            }
+                        }
+                        .onDelete { indexSet in
+                            for i in indexSet {
+                                ProjectFileManager.deleteProject(url: projects[i].url)
+                            }
+                            projects = ProjectFileManager.listProjects()
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Saved Projects")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+            }
+        }
+        .onAppear {
+            projects = ProjectFileManager.listProjects()
         }
     }
 }
