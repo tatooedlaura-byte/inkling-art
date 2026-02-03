@@ -37,8 +37,12 @@ class AnimationStore: ObservableObject {
     }
 
     func initialize(gridSize: Int) {
+        initialize(width: gridSize, height: gridSize)
+    }
+
+    func initialize(width: Int, height: Int) {
         stopPlayback()
-        let grid = PixelGrid(width: gridSize, height: gridSize)
+        let grid = PixelGrid(width: width, height: height)
         frames = [AnimationFrame(grid: grid)]
         currentFrameIndex = 0
     }
@@ -66,8 +70,9 @@ class AnimationStore: ObservableObject {
 
     func addFrame(canvas: PixelCanvasUIView) {
         syncCurrentFrameFromCanvas(canvas)
-        let gridSize = frames.first?.grid.width ?? 16
-        let newFrame = AnimationFrame(grid: PixelGrid(width: gridSize, height: gridSize))
+        let w = frames.first?.grid.width ?? 16
+        let h = frames.first?.grid.height ?? 16
+        let newFrame = AnimationFrame(grid: PixelGrid(width: w, height: h))
         frames.insert(newFrame, at: currentFrameIndex + 1)
         currentFrameIndex += 1
         loadFrameToCanvas(canvas, index: currentFrameIndex)

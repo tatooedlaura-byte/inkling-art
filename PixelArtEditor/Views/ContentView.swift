@@ -3,7 +3,8 @@ import SwiftUI
 struct ContentView: View {
     @State private var currentTool: Tool = .pencil
     @State private var currentColor: UIColor = .black
-    @State private var gridSize: Int = 16
+    @State private var gridWidth: Int = 16
+    @State private var gridHeight: Int = 16
     @State private var undoTrigger: Int = 0
     @State private var redoTrigger: Int = 0
     @State private var selectedPaletteIndex: Int = 0
@@ -14,7 +15,8 @@ struct ContentView: View {
     var body: some View {
         VStack(spacing: 0) {
             TopBarView(
-                gridSize: $gridSize,
+                gridWidth: $gridWidth,
+                gridHeight: $gridHeight,
                 undoTrigger: $undoTrigger,
                 redoTrigger: $redoTrigger,
                 templateGrid: $templateGrid,
@@ -27,7 +29,8 @@ struct ContentView: View {
                 CanvasView(
                     currentColor: $currentColor,
                     currentTool: $currentTool,
-                    gridSize: $gridSize,
+                    gridWidth: $gridWidth,
+                    gridHeight: $gridHeight,
                     undoTrigger: $undoTrigger,
                     redoTrigger: $redoTrigger,
                     templateGrid: $templateGrid,
@@ -56,10 +59,7 @@ struct ContentView: View {
             )
         }
         .onAppear {
-            animationStore.initialize(gridSize: gridSize)
-        }
-        .onChange(of: gridSize) { newSize in
-            animationStore.initialize(gridSize: newSize)
+            animationStore.initialize(width: gridWidth, height: gridHeight)
         }
         .ignoresSafeArea(.keyboard)
     }

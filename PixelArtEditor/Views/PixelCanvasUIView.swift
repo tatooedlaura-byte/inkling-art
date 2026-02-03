@@ -31,11 +31,21 @@ class PixelCanvasUIView: UIView {
     private(set) var redoStack: [PixelGrid] = []
     private var strokeStartGrid: PixelGrid?
 
+    // Multi-touch tracking
+    private var activeTouchCount = 0
+    private var multiTouchDetected = false
+
     // Checkerboard tile
     private var checkerPattern: UIColor?
 
     init(gridSize: Int) {
         self.grid = PixelGrid(width: gridSize, height: gridSize)
+        super.init(frame: .zero)
+        setup()
+    }
+
+    init(gridWidth: Int, gridHeight: Int) {
+        self.grid = PixelGrid(width: gridWidth, height: gridHeight)
         super.init(frame: .zero)
         setup()
     }
@@ -94,11 +104,33 @@ class PixelCanvasUIView: UIView {
     // MARK: - Grid size
 
     func changeGridSize(_ size: Int) {
+        changeGridSize(width: size, height: size)
+    }
+
+    func changeGridSize(width: Int, height: Int) {
         pushUndo()
-        grid = PixelGrid(width: size, height: size)
+        grid = PixelGrid(width: width, height: height)
         canvasScale = 1.0
         canvasOffset = .zero
         redoStack.removeAll()
+        setNeedsDisplay()
+    }
+
+    // MARK: - Zoom
+
+    func zoomIn() {
+        canvasScale = min(canvasScale * 1.5, 20)
+        setNeedsDisplay()
+    }
+
+    func zoomOut() {
+        canvasScale = max(canvasScale / 1.5, 0.25)
+        setNeedsDisplay()
+    }
+
+    func resetZoom() {
+        canvasScale = 1.0
+        canvasOffset = .zero
         setNeedsDisplay()
     }
 
@@ -253,13 +285,21 @@ class PixelCanvasUIView: UIView {
     // MARK: - Touch handling
 
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
-
-        // Only handle stylus or single-finger drawing touches
-        if touch.type != .pencil && touches.count < 2 {
-            // Allow single finger drawing too for simulator
+        activeTouchCount = event?.allTouches?.count ?? touches.count
+        if activeTouchCount > 1 {
+            multiTouchDetected = true
+            // Revert if we already started drawing this stroke
+            if let startGrid = strokeStartGrid {
+                _ = undoStack.popLast()
+                grid = startGrid
+                strokeStartGrid = nil
+                setNeedsDisplay()
+            }
+            return
         }
+        multiTouchDetected = false
 
+        guard let touch = touches.first else { return }
         let loc = touch.location(in: self)
         guard let pos = gridPosition(for: loc) else { return }
 
@@ -302,6 +342,10 @@ class PixelCanvasUIView: UIView {
     }
 
     override func touchesMoved(_ touches: Set<UITouch>, with event: UIEvent?) {
+        activeTouchCount = event?.allTouches?.count ?? touches.count
+        if activeTouchCount > 1 { multiTouchDetected = true }
+        guard !multiTouchDetected else { return }
+
         guard let touch = touches.first else { return }
         let loc = touch.location(in: self)
         guard let pos = gridPosition(for: loc) else { return }
@@ -322,6 +366,16 @@ class PixelCanvasUIView: UIView {
     }
 
     override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        activeTouchCount = max(0, (event?.allTouches?.count ?? 1) - touches.count)
+        if multiTouchDetected {
+            if activeTouchCount == 0 { multiTouchDetected = false }
+            strokeStartGrid = nil
+            isDrawingLine = false
+            lineStart = nil
+            lineEnd = nil
+            return
+        }
+
         if currentTool == .line, isDrawingLine, let start = lineStart, let end = lineEnd {
             let points = bresenhamLine(x0: start.1, y0: start.0, x1: end.1, y1: end.0)
             for (py, px) in points {

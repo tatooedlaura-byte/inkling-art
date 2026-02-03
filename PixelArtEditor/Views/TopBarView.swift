@@ -2,7 +2,8 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct TopBarView: View {
-    @Binding var gridSize: Int
+    @Binding var gridWidth: Int
+    @Binding var gridHeight: Int
     @Binding var undoTrigger: Int
     @Binding var redoTrigger: Int
     @Binding var templateGrid: PixelGrid?
@@ -16,6 +17,10 @@ struct TopBarView: View {
     @State private var projectName = ""
     @State private var showOpenPicker = false
     @State private var showSavedProjectsSheet = false
+    @State private var currentProjectName = ""
+    @State private var showCustomSizeAlert = false
+    @State private var customWidthText = ""
+    @State private var customHeightText = ""
 
     private let sizes = [8, 16, 32, 64]
 
@@ -26,13 +31,29 @@ struct TopBarView: View {
                 Menu("New") {
                     ForEach(sizes, id: \.self) { size in
                         Button("\(size)×\(size)") {
-                            gridSize = size
+                            gridWidth = size
+                            gridHeight = size
                             newProject()
                         }
                     }
+                    Divider()
+                    Button("Custom Size…") {
+                        customWidthText = "\(gridWidth)"
+                        customHeightText = "\(gridHeight)"
+                        showCustomSizeAlert = true
+                    }
                 }
-                Button("Save…") {
-                    projectName = ""
+                Button("Save") {
+                    if currentProjectName.isEmpty {
+                        projectName = ""
+                        showSaveNameAlert = true
+                    } else {
+                        projectName = currentProjectName
+                        saveProject()
+                    }
+                }
+                Button("Save As…") {
+                    projectName = currentProjectName
                     showSaveNameAlert = true
                 }
                 Divider()
@@ -45,7 +66,7 @@ struct TopBarView: View {
                 Divider()
                 Menu("Export PNG") {
                     ForEach([1, 4, 8, 16, 32], id: \.self) { s in
-                        Button("\(s)x — \(gridSize * s)×\(gridSize * s)") {
+                        Button("\(s)x — \(gridWidth * s)×\(gridHeight * s)") {
                             exportPNG(scale: s)
                         }
                     }
@@ -78,18 +99,27 @@ struct TopBarView: View {
                 ForEach(sizes, id: \.self) { size in
                     Menu("\(size)×\(size)") {
                         Button("Blank") {
-                            gridSize = size
+                            gridWidth = size
+                            gridHeight = size
+                            newProject()
                         }
                         Button("Character Template") {
                             templateGrid = CharacterTemplates.template(for: size)
-                            gridSize = size
+                            gridWidth = size
+                            gridHeight = size
                         }
                     }
+                }
+                Divider()
+                Button("Custom Size…") {
+                    customWidthText = "\(gridWidth)"
+                    customHeightText = "\(gridHeight)"
+                    showCustomSizeAlert = true
                 }
             } label: {
                 HStack(spacing: 4) {
                     Image(systemName: "grid")
-                    Text("\(gridSize)×\(gridSize)")
+                    Text("\(gridWidth)×\(gridHeight)")
                         .font(.subheadline.monospacedDigit())
                 }
                 .padding(.horizontal, 10)
@@ -99,6 +129,31 @@ struct TopBarView: View {
             }
 
             Spacer()
+
+            // Zoom
+            Button {
+                canvasStore.canvasView?.zoomOut()
+            } label: {
+                Image(systemName: "minus.magnifyingglass")
+                    .font(.title3)
+            }
+
+            Button {
+                canvasStore.canvasView?.zoomIn()
+            } label: {
+                Image(systemName: "plus.magnifyingglass")
+                    .font(.title3)
+            }
+
+            Button {
+                canvasStore.canvasView?.resetZoom()
+            } label: {
+                Image(systemName: "arrow.counterclockwise.magnifyingglass")
+                    .font(.title3)
+            }
+
+            Divider()
+                .frame(height: 20)
 
             // Undo / Redo
             Button {
@@ -144,12 +199,31 @@ struct TopBarView: View {
                 openProject(url: url)
             }
         }
+        .alert("Custom Size", isPresented: $showCustomSizeAlert) {
+            TextField("Width", text: $customWidthText)
+                .keyboardType(.numberPad)
+            TextField("Height", text: $customHeightText)
+                .keyboardType(.numberPad)
+            Button("Cancel", role: .cancel) {}
+            Button("Create") {
+                let w = Int(customWidthText) ?? gridWidth
+                let h = Int(customHeightText) ?? gridHeight
+                let clampedW = max(4, min(w, 128))
+                let clampedH = max(4, min(h, 128))
+                gridWidth = clampedW
+                gridHeight = clampedH
+                newProject()
+            }
+        } message: {
+            Text("Enter width and height (4–128).")
+        }
     }
 
     private func newProject() {
-        animationStore.initialize(gridSize: gridSize)
+        currentProjectName = ""
+        animationStore.initialize(width: gridWidth, height: gridHeight)
         if let cv = canvasStore.canvasView {
-            cv.changeGridSize(gridSize)
+            cv.changeGridSize(width: gridWidth, height: gridHeight)
             animationStore.loadFrameToCanvas(cv, index: 0)
         }
     }
@@ -160,6 +234,7 @@ struct TopBarView: View {
         let data = ProjectData.from(animationStore: animationStore, canvas: canvasStore.canvasView)
         do {
             _ = try ProjectFileManager.save(data: data, name: name)
+            currentProjectName = name
         } catch {
             saveError = error.localizedDescription
             saveSuccess = false
@@ -172,9 +247,11 @@ struct TopBarView: View {
             let shouldStop = url.startAccessingSecurityScopedResource()
             defer { if shouldStop { url.stopAccessingSecurityScopedResource() } }
             let data = try ProjectFileManager.load(url: url)
-            gridSize = data.gridWidth
+            currentProjectName = url.deletingPathExtension().lastPathComponent
+            gridWidth = data.gridWidth
+            gridHeight = data.gridHeight
             if let cv = canvasStore.canvasView {
-                cv.changeGridSize(data.gridWidth)
+                cv.changeGridSize(width: data.gridWidth, height: data.gridHeight)
             }
             data.restore(to: animationStore, canvas: canvasStore.canvasView)
         } catch {

@@ -3,7 +3,8 @@ import SwiftUI
 struct CanvasView: UIViewRepresentable {
     @Binding var currentColor: UIColor
     @Binding var currentTool: Tool
-    @Binding var gridSize: Int
+    @Binding var gridWidth: Int
+    @Binding var gridHeight: Int
     @Binding var undoTrigger: Int
     @Binding var redoTrigger: Int
     @Binding var templateGrid: PixelGrid?
@@ -12,7 +13,7 @@ struct CanvasView: UIViewRepresentable {
     var animationStore: AnimationStore
 
     func makeUIView(context: Context) -> PixelCanvasUIView {
-        let view = PixelCanvasUIView(gridSize: gridSize)
+        let view = PixelCanvasUIView(gridWidth: gridWidth, gridHeight: gridHeight)
         view.delegate = context.coordinator
         view.currentColor = currentColor
         view.currentTool = currentTool
@@ -38,10 +39,12 @@ struct CanvasView: UIViewRepresentable {
         if let template = templateGrid {
             DispatchQueue.main.async { templateGrid = nil }
             uiView.loadGrid(template)
-            context.coordinator.lastGridSize = template.width
-        } else if context.coordinator.lastGridSize != gridSize {
-            context.coordinator.lastGridSize = gridSize
-            uiView.changeGridSize(gridSize)
+            context.coordinator.lastGridWidth = template.width
+            context.coordinator.lastGridHeight = template.height
+        } else if context.coordinator.lastGridWidth != gridWidth || context.coordinator.lastGridHeight != gridHeight {
+            context.coordinator.lastGridWidth = gridWidth
+            context.coordinator.lastGridHeight = gridHeight
+            uiView.changeGridSize(width: gridWidth, height: gridHeight)
         }
     }
 
@@ -52,7 +55,8 @@ struct CanvasView: UIViewRepresentable {
     class Coordinator: NSObject, PixelCanvasDelegate {
         var lastUndoTrigger = 0
         var lastRedoTrigger = 0
-        var lastGridSize = 16
+        var lastGridWidth = 16
+        var lastGridHeight = 16
         var onPickColor: (UIColor) -> Void
         var animationStore: AnimationStore
 
