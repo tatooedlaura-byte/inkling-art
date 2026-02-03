@@ -35,11 +35,14 @@ struct FrameTimelineView: View {
                 Text("\(animationStore.fps)")
                     .font(.caption.monospacedDigit())
                     .frame(width: 20)
-                Stepper("", value: $animationStore.fps, in: 4...24)
+                Stepper("", value: $animationStore.fps, in: 1...30)
                     .labelsHidden()
                     .scaleEffect(0.8)
             }
             .frame(width: 80)
+            .onChange(of: animationStore.fps) { _ in
+                animationStore.updatePlaybackSpeed()
+            }
 
             Divider()
                 .frame(height: 40)

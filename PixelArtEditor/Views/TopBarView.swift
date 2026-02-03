@@ -21,6 +21,7 @@ struct TopBarView: View {
     @State private var showCustomSizeAlert = false
     @State private var customWidthText = ""
     @State private var customHeightText = ""
+    @State private var showCloseConfirm = false
 
     private let sizes = [8, 16, 32, 64]
 
@@ -81,6 +82,10 @@ struct TopBarView: View {
                 }
                 Button("Export Sprite Sheet") {
                     exportSpriteSheet()
+                }
+                Divider()
+                Button("Close Project", role: .destructive) {
+                    showCloseConfirm = true
                 }
             } label: {
                 HStack(spacing: 4) {
@@ -216,6 +221,35 @@ struct TopBarView: View {
             }
         } message: {
             Text("Enter width and height (4–128).")
+        }
+        .alert("Close Project?", isPresented: $showCloseConfirm) {
+            Button("Save & Close") {
+                if currentProjectName.isEmpty {
+                    projectName = ""
+                    showSaveNameAlert = true
+                } else {
+                    projectName = currentProjectName
+                    saveProject()
+                }
+                closeProject()
+            }
+            Button("Close Without Saving", role: .destructive) {
+                closeProject()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Do you want to save before closing?")
+        }
+    }
+
+    private func closeProject() {
+        currentProjectName = ""
+        gridWidth = 16
+        gridHeight = 16
+        animationStore.initialize(width: gridWidth, height: gridHeight)
+        if let cv = canvasStore.canvasView {
+            cv.changeGridSize(width: gridWidth, height: gridHeight)
+            animationStore.loadFrameToCanvas(cv, index: 0)
         }
     }
 

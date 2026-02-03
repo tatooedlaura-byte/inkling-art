@@ -25,6 +25,7 @@ class AnimationStore: ObservableObject {
     @Published var isPlaying: Bool = false
 
     private var playbackTimer: Timer?
+    private weak var playbackCanvas: PixelCanvasUIView?
 
     var currentFrame: AnimationFrame? {
         guard currentFrameIndex >= 0, currentFrameIndex < frames.count else { return nil }
@@ -99,13 +100,25 @@ class AnimationStore: ObservableObject {
         guard frames.count > 1 else { return }
         syncCurrentFrameFromCanvas(canvas)
         isPlaying = true
+        playbackCanvas = canvas
         canvas.isUserInteractionEnabled = false
+        schedulePlaybackTimer()
+    }
+
+    private func schedulePlaybackTimer() {
+        playbackTimer?.invalidate()
+        guard isPlaying, let canvas = playbackCanvas else { return }
         playbackTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / Double(fps), repeats: true) { [weak self] _ in
             guard let self = self else { return }
             let next = (self.currentFrameIndex + 1) % self.frames.count
             self.currentFrameIndex = next
             canvas.loadGridWithoutUndo(self.frames[next].grid)
         }
+    }
+
+    func updatePlaybackSpeed() {
+        guard isPlaying else { return }
+        schedulePlaybackTimer()
     }
 
     func stopPlayback(canvas: PixelCanvasUIView? = nil) {
