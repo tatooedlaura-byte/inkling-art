@@ -28,6 +28,7 @@
 		A1000013 /* SpriteSheetExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000013 /* SpriteSheetExporter.swift */; };
 		A1000014 /* ProjectData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014 /* ProjectData.swift */; };
 		A1000015 /* ProjectFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000015 /* ProjectFileManager.swift */; };
+		A1000016 /* ShapeRasterizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000016 /* ShapeRasterizer.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 		A2000013 /* SpriteSheetExporter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpriteSheetExporter.swift; sourceTree = "<group>"; };
 		A2000014 /* ProjectData.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectData.swift; sourceTree = "<group>"; };
 		A2000015 /* ProjectFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFileManager.swift; sourceTree = "<group>"; };
+		A2000016 /* ShapeRasterizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRasterizer.swift; sourceTree = "<group>"; };
 		A3000001 /* PixelArtEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PixelArtEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -116,6 +118,7 @@
 				A2000012 /* GIFExporter.swift */,
 				A2000013 /* SpriteSheetExporter.swift */,
 				A2000015 /* ProjectFileManager.swift */,
+				A2000016 /* ShapeRasterizer.swift */,
 			);
 			path = Utils;
 			sourceTree = "<group>";
@@ -226,6 +229,7 @@
 				A1000013 /* SpriteSheetExporter.swift in Sources */,
 				A1000014 /* ProjectData.swift in Sources */,
 				A1000015 /* ProjectFileManager.swift in Sources */,
+				A1000016 /* ShapeRasterizer.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

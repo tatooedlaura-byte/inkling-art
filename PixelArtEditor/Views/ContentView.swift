@@ -8,6 +8,8 @@ struct ContentView: View {
     @State private var undoTrigger: Int = 0
     @State private var redoTrigger: Int = 0
     @State private var selectedPaletteIndex: Int = 0
+    @State private var currentShapeKind: ShapeKind = .line
+    @State private var shapeFilled: Bool = false
     @State private var templateGrid: PixelGrid?
     @StateObject private var canvasStore = CanvasStore()
     @StateObject private var animationStore = AnimationStore()
@@ -29,6 +31,8 @@ struct ContentView: View {
                 CanvasView(
                     currentColor: $currentColor,
                     currentTool: $currentTool,
+                    currentShapeKind: $currentShapeKind,
+                    shapeFilled: $shapeFilled,
                     gridWidth: $gridWidth,
                     gridHeight: $gridHeight,
                     undoTrigger: $undoTrigger,
@@ -44,7 +48,9 @@ struct ContentView: View {
                 .background(Color(.systemGray6))
 
                 // Floating toolbar on the left
-                ToolbarView(selectedTool: $currentTool)
+                ToolbarView(selectedTool: $currentTool,
+                           selectedShapeKind: $currentShapeKind,
+                           shapeFilled: $shapeFilled)
                     .padding(.leading, 12)
             }
 

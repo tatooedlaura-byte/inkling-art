@@ -15,16 +15,18 @@ class PixelCanvasUIView: UIView {
 
     var currentColor: UIColor = .black
     var currentTool: Tool = .pencil
+    var currentShapeKind: ShapeKind = .line
+    var shapeFilled: Bool = false
     var onionSkinGrid: PixelGrid?
 
     // Transform state
     private var canvasScale: CGFloat = 1.0
     private var canvasOffset: CGPoint = .zero
 
-    // Line tool state
-    private var lineStart: (Int, Int)?
-    private var lineEnd: (Int, Int)?
-    private var isDrawingLine = false
+    // Shape tool state (used for line + all shapes)
+    private var shapeStart: (Int, Int)?
+    private var shapeEnd: (Int, Int)?
+    private var isDrawingShape = false
 
     // Undo/redo
     private(set) var undoStack: [PixelGrid] = []
@@ -61,23 +63,19 @@ class PixelCanvasUIView: UIView {
         isMultipleTouchEnabled = true
         contentMode = .redraw
 
-        // Pan gesture (two fingers)
         let pan = UIPanGestureRecognizer(target: self, action: #selector(handlePan(_:)))
         pan.minimumNumberOfTouches = 2
         pan.maximumNumberOfTouches = 2
         addGestureRecognizer(pan)
 
-        // Pinch gesture
         let pinch = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
         addGestureRecognizer(pinch)
 
-        // Three-finger swipe left = undo
         let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(handleThreeFingerSwipeLeft))
         swipeLeft.direction = .left
         swipeLeft.numberOfTouchesRequired = 3
         addGestureRecognizer(swipeLeft)
 
-        // Three-finger swipe right = redo
         let swipeRight = UISwipeGestureRecognizer(target: self, action: #selector(handleThreeFingerSwipeRight))
         swipeRight.direction = .right
         swipeRight.numberOfTouchesRequired = 3
@@ -225,7 +223,7 @@ class PixelCanvasUIView: UIView {
         ctx.fill(gridRect)
         ctx.restoreGState()
 
-        // Onion skin (previous frame at 25% opacity)
+        // Onion skin
         if let onion = onionSkinGrid {
             for row in 0..<onion.height {
                 for col in 0..<onion.width {
@@ -251,9 +249,13 @@ class PixelCanvasUIView: UIView {
             }
         }
 
-        // Line tool preview
-        if isDrawingLine, let start = lineStart, let end = lineEnd {
-            let points = bresenhamLine(x0: start.1, y0: start.0, x1: end.1, y1: end.0)
+        // Shape preview
+        if isDrawingShape, let start = shapeStart, let end = shapeEnd {
+            let points = ShapeRasterizer.rasterize(
+                shape: currentShapeKind,
+                r0: start.0, c0: start.1, r1: end.0, c1: end.1,
+                filled: currentShapeKind == .line ? false : shapeFilled
+            )
             ctx.setFillColor(currentColor.cgColor)
             for (py, px) in points {
                 guard py >= 0, py < grid.height, px >= 0, px < grid.width else { continue }
@@ -288,7 +290,6 @@ class PixelCanvasUIView: UIView {
         activeTouchCount = event?.allTouches?.count ?? touches.count
         if activeTouchCount > 1 {
             multiTouchDetected = true
-            // Revert if we already started drawing this stroke
             if let startGrid = strokeStartGrid {
                 _ = undoStack.popLast()
                 grid = startGrid
@@ -330,11 +331,11 @@ class PixelCanvasUIView: UIView {
                 delegate?.canvasDidPickColor(color)
             }
 
-        case .line:
+        case .shape:
             strokeStartGrid = grid
-            lineStart = (pos.row, pos.col)
-            lineEnd = (pos.row, pos.col)
-            isDrawingLine = true
+            shapeStart = (pos.row, pos.col)
+            shapeEnd = (pos.row, pos.col)
+            isDrawingShape = true
             pushUndo()
             redoStack.removeAll()
             setNeedsDisplay()
@@ -357,8 +358,8 @@ class PixelCanvasUIView: UIView {
         case .eraser:
             grid[pos.row, pos.col] = nil
             setNeedsDisplay()
-        case .line:
-            lineEnd = (pos.row, pos.col)
+        case .shape:
+            shapeEnd = (pos.row, pos.col)
             setNeedsDisplay()
         default:
             break
@@ -370,21 +371,25 @@ class PixelCanvasUIView: UIView {
         if multiTouchDetected {
             if activeTouchCount == 0 { multiTouchDetected = false }
             strokeStartGrid = nil
-            isDrawingLine = false
-            lineStart = nil
-            lineEnd = nil
+            isDrawingShape = false
+            shapeStart = nil
+            shapeEnd = nil
             return
         }
 
-        if currentTool == .line, isDrawingLine, let start = lineStart, let end = lineEnd {
-            let points = bresenhamLine(x0: start.1, y0: start.0, x1: end.1, y1: end.0)
+        if currentTool == .shape, isDrawingShape, let start = shapeStart, let end = shapeEnd {
+            let points = ShapeRasterizer.rasterize(
+                shape: currentShapeKind,
+                r0: start.0, c0: start.1, r1: end.0, c1: end.1,
+                filled: currentShapeKind == .line ? false : shapeFilled
+            )
             for (py, px) in points {
                 guard py >= 0, py < grid.height, px >= 0, px < grid.width else { continue }
                 grid[py, px] = currentColor
             }
-            isDrawingLine = false
-            lineStart = nil
-            lineEnd = nil
+            isDrawingShape = false
+            shapeStart = nil
+            shapeEnd = nil
             setNeedsDisplay()
         }
 
@@ -393,9 +398,9 @@ class PixelCanvasUIView: UIView {
     }
 
     override func touchesCancelled(_ touches: Set<UITouch>, with event: UIEvent?) {
-        isDrawingLine = false
-        lineStart = nil
-        lineEnd = nil
+        isDrawingShape = false
+        shapeStart = nil
+        shapeEnd = nil
         strokeStartGrid = nil
         setNeedsDisplay()
     }
@@ -423,31 +428,5 @@ class PixelCanvasUIView: UIView {
 
     @objc private func handleThreeFingerSwipeRight() {
         performRedo()
-    }
-
-    // MARK: - Bresenham line
-
-    private func bresenhamLine(x0: Int, y0: Int, x1: Int, y1: Int) -> [(Int, Int)] {
-        var points: [(Int, Int)] = []
-        var x0 = x0, y0 = y0
-        let dx = abs(x1 - x0)
-        let dy = -abs(y1 - y0)
-        let sx = x0 < x1 ? 1 : -1
-        let sy = y0 < y1 ? 1 : -1
-        var err = dx + dy
-        while true {
-            points.append((y0, x0))
-            if x0 == x1 && y0 == y1 { break }
-            let e2 = 2 * err
-            if e2 >= dy {
-                err += dy
-                x0 += sx
-            }
-            if e2 <= dx {
-                err += dx
-                y0 += sy
-            }
-        }
-        return points
     }
 }

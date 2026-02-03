@@ -3,6 +3,8 @@ import SwiftUI
 struct CanvasView: UIViewRepresentable {
     @Binding var currentColor: UIColor
     @Binding var currentTool: Tool
+    @Binding var currentShapeKind: ShapeKind
+    @Binding var shapeFilled: Bool
     @Binding var gridWidth: Int
     @Binding var gridHeight: Int
     @Binding var undoTrigger: Int
@@ -17,6 +19,8 @@ struct CanvasView: UIViewRepresentable {
         view.delegate = context.coordinator
         view.currentColor = currentColor
         view.currentTool = currentTool
+        view.currentShapeKind = currentShapeKind
+        view.shapeFilled = shapeFilled
         DispatchQueue.main.async {
             canvasStore.canvasView = view
         }
@@ -26,6 +30,8 @@ struct CanvasView: UIViewRepresentable {
     func updateUIView(_ uiView: PixelCanvasUIView, context: Context) {
         uiView.currentColor = currentColor
         uiView.currentTool = currentTool
+        uiView.currentShapeKind = currentShapeKind
+        uiView.shapeFilled = shapeFilled
         uiView.onionSkinGrid = animationStore.previousFrameGrid
 
         if context.coordinator.lastUndoTrigger != undoTrigger {
