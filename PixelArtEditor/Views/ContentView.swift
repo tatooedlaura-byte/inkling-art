@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct ContentView: View {
+    @State private var canvasMode: CanvasMode = .pixel
     @State private var currentTool: Tool = .pencil
     @State private var currentColor: UIColor = .black
     @State private var gridWidth: Int = 16
@@ -11,41 +12,69 @@ struct ContentView: View {
     @State private var currentShapeKind: ShapeKind = .line
     @State private var shapeFilled: Bool = false
     @State private var templateGrid: PixelGrid?
+    @State private var brushWidth: CGFloat = 5.0
+    @State private var referenceImage: UIImage?
+    @State private var referenceOpacity: CGFloat = 0.3
     @StateObject private var canvasStore = CanvasStore()
     @StateObject private var animationStore = AnimationStore()
 
     var body: some View {
         VStack(spacing: 0) {
             TopBarView(
+                canvasMode: $canvasMode,
                 gridWidth: $gridWidth,
                 gridHeight: $gridHeight,
+                brushWidth: $brushWidth,
                 undoTrigger: $undoTrigger,
                 redoTrigger: $redoTrigger,
                 templateGrid: $templateGrid,
+                referenceImage: $referenceImage,
+                referenceOpacity: $referenceOpacity,
                 canvasStore: canvasStore,
                 animationStore: animationStore
             )
 
             ZStack(alignment: .leading) {
-                // Canvas
-                CanvasView(
-                    currentColor: $currentColor,
-                    currentTool: $currentTool,
-                    currentShapeKind: $currentShapeKind,
-                    shapeFilled: $shapeFilled,
-                    gridWidth: $gridWidth,
-                    gridHeight: $gridHeight,
-                    undoTrigger: $undoTrigger,
-                    redoTrigger: $redoTrigger,
-                    templateGrid: $templateGrid,
-                    onPickColor: { color in
-                        currentColor = color
-                        currentTool = .pencil
-                    },
-                    canvasStore: canvasStore,
-                    animationStore: animationStore
-                )
-                .background(Color(.systemGray6))
+                // Canvas - switch based on mode
+                if canvasMode == .pixel {
+                    CanvasView(
+                        currentColor: $currentColor,
+                        currentTool: $currentTool,
+                        currentShapeKind: $currentShapeKind,
+                        shapeFilled: $shapeFilled,
+                        gridWidth: $gridWidth,
+                        gridHeight: $gridHeight,
+                        undoTrigger: $undoTrigger,
+                        redoTrigger: $redoTrigger,
+                        templateGrid: $templateGrid,
+                        onPickColor: { color in
+                            currentColor = color
+                            currentTool = .pencil
+                        },
+                        canvasStore: canvasStore,
+                        animationStore: animationStore
+                    )
+                    .background(Color(.systemGray6))
+                } else {
+                    SmoothCanvasView(
+                        currentColor: $currentColor,
+                        currentTool: $currentTool,
+                        currentShapeKind: $currentShapeKind,
+                        shapeFilled: $shapeFilled,
+                        brushWidth: $brushWidth,
+                        undoTrigger: $undoTrigger,
+                        redoTrigger: $redoTrigger,
+                        referenceImage: $referenceImage,
+                        referenceOpacity: $referenceOpacity,
+                        canvasStore: canvasStore,
+                        animationStore: animationStore,
+                        onPickColor: { color in
+                            currentColor = color
+                            currentTool = .pencil
+                        }
+                    )
+                    .background(Color(.systemGray6))
+                }
 
                 // Floating toolbar on the left
                 ToolbarView(selectedTool: $currentTool,

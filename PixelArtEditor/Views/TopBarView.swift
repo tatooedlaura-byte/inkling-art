@@ -3,11 +3,15 @@ import UniformTypeIdentifiers
 import PhotosUI
 
 struct TopBarView: View {
+    @Binding var canvasMode: CanvasMode
     @Binding var gridWidth: Int
     @Binding var gridHeight: Int
+    @Binding var brushWidth: CGFloat
     @Binding var undoTrigger: Int
     @Binding var redoTrigger: Int
     @Binding var templateGrid: PixelGrid?
+    @Binding var referenceImage: UIImage?
+    @Binding var referenceOpacity: CGFloat
     @ObservedObject var canvasStore: CanvasStore
     @ObservedObject var animationStore: AnimationStore
     @State private var showExportMenu = false
@@ -25,8 +29,6 @@ struct TopBarView: View {
     @State private var showCloseConfirm = false
     @State private var showPhotoPicker = false
     @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var referenceImage: UIImage?
-    @State private var referenceOpacity: Double = 0.3
     @State private var pendingReferenceImage: UIImage?
     @State private var showReferenceSizeSheet = false
 
@@ -106,36 +108,102 @@ struct TopBarView: View {
                 .cornerRadius(8)
             }
 
-            // Grid size picker
-            Menu {
-                ForEach(sizes, id: \.self) { size in
-                    Menu("\(size)×\(size)") {
-                        Button("Blank") {
-                            gridWidth = size
-                            gridHeight = size
-                            newProject()
-                        }
-                        Button("Character Template") {
-                            templateGrid = CharacterTemplates.template(for: size)
-                            gridWidth = size
-                            gridHeight = size
+            // Mode picker
+            Picker("Mode", selection: $canvasMode) {
+                Text("Pixel").tag(CanvasMode.pixel)
+                Text("Smooth").tag(CanvasMode.smooth)
+            }
+            .pickerStyle(.segmented)
+            .frame(width: 140)
+
+            // Grid size picker (pixel mode) / Brush width (smooth mode)
+            if canvasMode == .pixel {
+                Menu {
+                    ForEach(sizes, id: \.self) { size in
+                        Menu("\(size)×\(size)") {
+                            Button("Blank") {
+                                gridWidth = size
+                                gridHeight = size
+                                newProject()
+                            }
+                            Button("Character Template") {
+                                templateGrid = CharacterTemplates.template(for: size)
+                                gridWidth = size
+                                gridHeight = size
+                            }
                         }
                     }
+                    Divider()
+                    Button("Custom Size…") {
+                        customWidthText = "\(gridWidth)"
+                        customHeightText = "\(gridHeight)"
+                        showCustomSizeAlert = true
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "grid")
+                        Text("\(gridWidth)×\(gridHeight)")
+                            .font(.subheadline.monospacedDigit())
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(Color(.systemGray5))
+                    .cornerRadius(8)
                 }
-                Divider()
-                Button("Custom Size…") {
-                    customWidthText = "\(gridWidth)"
-                    customHeightText = "\(gridHeight)"
-                    showCustomSizeAlert = true
+            } else {
+                // Template menu for smooth mode
+                Menu {
+                    Menu("Character Template") {
+                        Button("Adult (Large)") {
+                            referenceImage = CharacterTemplate.readerTemplate(scale: 10)
+                        }
+                        Button("Adult (Medium)") {
+                            referenceImage = CharacterTemplate.readerTemplate(scale: 8)
+                        }
+                        Button("Adult (Small)") {
+                            referenceImage = CharacterTemplate.readerTemplate(scale: 6)
+                        }
+                        Divider()
+                        Button("Kid (Large)") {
+                            referenceImage = CharacterTemplate.kidTemplate(scale: 8)
+                        }
+                        Button("Kid (Medium)") {
+                            referenceImage = CharacterTemplate.kidTemplate(scale: 6)
+                        }
+                        Button("Kid (Small)") {
+                            referenceImage = CharacterTemplate.kidTemplate(scale: 4)
+                        }
+                    }
+                    if referenceImage != nil {
+                        Divider()
+                        Button("Clear Template", role: .destructive) {
+                            referenceImage = nil
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: referenceImage != nil ? "person.crop.rectangle.fill" : "person.crop.rectangle")
+                        Text("Template")
+                            .font(.subheadline)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(referenceImage != nil ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
+                    .cornerRadius(8)
                 }
-            } label: {
+
+                // Brush width for smooth mode
                 HStack(spacing: 4) {
-                    Image(systemName: "grid")
-                    Text("\(gridWidth)×\(gridHeight)")
-                        .font(.subheadline.monospacedDigit())
+                    Image(systemName: "pencil.tip")
+                        .font(.caption)
+                    Slider(value: $brushWidth, in: 1...30, step: 1)
+                        .frame(width: 80)
+                    Text("\(Int(brushWidth))")
+                        .font(.caption.monospacedDigit())
+                        .frame(width: 20)
                 }
-                .padding(.horizontal, 10)
-                .padding(.vertical, 6)
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
                 .background(Color(.systemGray5))
                 .cornerRadius(8)
             }
@@ -188,21 +256,33 @@ struct TopBarView: View {
 
             // Zoom
             Button {
-                canvasStore.canvasView?.zoomOut()
+                if canvasMode == .pixel {
+                    canvasStore.canvasView?.zoomOut()
+                } else {
+                    canvasStore.smoothCanvasView?.zoomOut()
+                }
             } label: {
                 Image(systemName: "minus.magnifyingglass")
                     .font(.title3)
             }
 
             Button {
-                canvasStore.canvasView?.zoomIn()
+                if canvasMode == .pixel {
+                    canvasStore.canvasView?.zoomIn()
+                } else {
+                    canvasStore.smoothCanvasView?.zoomIn()
+                }
             } label: {
                 Image(systemName: "plus.magnifyingglass")
                     .font(.title3)
             }
 
             Button {
-                canvasStore.canvasView?.resetZoom()
+                if canvasMode == .pixel {
+                    canvasStore.canvasView?.resetZoom()
+                } else {
+                    canvasStore.smoothCanvasView?.resetZoom()
+                }
             } label: {
                 Image(systemName: "arrow.counterclockwise.magnifyingglass")
                     .font(.title3)

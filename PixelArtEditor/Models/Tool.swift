@@ -1,5 +1,10 @@
 import Foundation
 
+enum CanvasMode: String, CaseIterable {
+    case pixel
+    case smooth
+}
+
 enum ShapeKind: String, CaseIterable, Identifiable {
     case line
     case rectangle

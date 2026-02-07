@@ -19,10 +19,12 @@
 		4242559D1342DC5998A7DAF8 /* ProjectData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7660CF8F9CB41AE3EFE16D80 /* ProjectData.swift */; };
 		760ECA8CAC514BF5ACF243B8 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8949BCCC99BBEB6735EA44C9 /* Palette.swift */; };
 		7638F4CED87B5E46E52368B4 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED56E4E6F6356BC938371991 /* Foundation.framework */; };
+		7BACB5C7CBB212DB23EF6FD4 /* SmoothCanvasUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3535BD1F7F43AC93648B4158 /* SmoothCanvasUIView.swift */; };
 		7D219B6618AAE5AF20EC27BF /* PNGExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63891AED2810DF3A007BF4F3 /* PNGExporter.swift */; };
 		864A48AC1AC8FBDC6A280CB7 /* TopBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10FC00928AA539BD548CF7E7 /* TopBarView.swift */; };
 		89D2392559C1C84E02DC4535 /* SmoothArtApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D76521F9181A917A315506B4 /* SmoothArtApp.swift */; };
 		8A149434B2C6BB7BFED85DC4 /* Tool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC6E9219820DBC8B628495B /* Tool.swift */; };
+		8CC6FC8C9F54683B524C51BE /* VectorCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = 25EFEA690F257DDB930E3101 /* VectorCanvas.swift */; };
 		A1000001 /* PixelArtApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* PixelArtApp.swift */; };
 		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* ContentView.swift */; };
 		A1000003 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* CanvasView.swift */; };
@@ -45,9 +47,11 @@
 		A1000014 /* ProjectData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014 /* ProjectData.swift */; };
 		A1000015 /* ProjectFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000015 /* ProjectFileManager.swift */; };
 		A1000016 /* ShapeRasterizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000016 /* ShapeRasterizer.swift */; };
+		BC959A6BD21AFF6A7D9657E1 /* SmoothCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97827FDD49AF4320929D44A /* SmoothCanvasView.swift */; };
 		C2933F58A1855EACB25AC47F /* CanvasStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F379B786AFEAB96599CFC6 /* CanvasStore.swift */; };
 		C51E9208B8ECE62F3C1D10C5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D7F38229A7F8B4BB68559F /* ContentView.swift */; };
 		CB11A71750843E19C4E5918E /* SmoothCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D322C0675EF65F8C84C7327 /* SmoothCanvasView.swift */; };
+		D793CB0474BCB659FEADDA5C /* CharacterTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A92423BFD09E9901ABF9FF /* CharacterTemplate.swift */; };
 		D93D20C05627E0C7BA87755E /* SmoothCanvasUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE085D9892579F686AA0AEE /* SmoothCanvasUIView.swift */; };
 /* End PBXBuildFile section */
 
@@ -58,6 +62,8 @@
 		1D322C0675EF65F8C84C7327 /* SmoothCanvasView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SmoothCanvasView.swift; path = SmoothArtEditor/Views/SmoothCanvasView.swift; sourceTree = "<group>"; };
 		1E6FC198F250ECDD15E8049A /* SpriteSheetExporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SpriteSheetExporter.swift; path = SmoothArtEditor/Utils/SpriteSheetExporter.swift; sourceTree = "<group>"; };
 		20576B5D6AAEB4CCF421B61C /* ToolbarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolbarView.swift; path = SmoothArtEditor/Views/ToolbarView.swift; sourceTree = "<group>"; };
+		25EFEA690F257DDB930E3101 /* VectorCanvas.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = VectorCanvas.swift; sourceTree = "<group>"; };
+		3535BD1F7F43AC93648B4158 /* SmoothCanvasUIView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SmoothCanvasUIView.swift; sourceTree = "<group>"; };
 		3734118F60129E9875E2E626 /* ProjectFileManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProjectFileManager.swift; path = SmoothArtEditor/Utils/ProjectFileManager.swift; sourceTree = "<group>"; };
 		39D7F38229A7F8B4BB68559F /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = SmoothArtEditor/Views/ContentView.swift; sourceTree = "<group>"; };
 		3C62195FEDCA4E8A81E90737 /* CharacterTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CharacterTemplate.swift; path = SmoothArtEditor/Models/CharacterTemplate.swift; sourceTree = "<group>"; };
@@ -93,7 +99,9 @@
 		A2000015 /* ProjectFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFileManager.swift; sourceTree = "<group>"; };
 		A2000016 /* ShapeRasterizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRasterizer.swift; sourceTree = "<group>"; };
 		A3000001 /* PixelArtEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PixelArtEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A97827FDD49AF4320929D44A /* SmoothCanvasView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SmoothCanvasView.swift; sourceTree = "<group>"; };
 		B8D0FCFDC93E9B3D1B52510F /* VectorCanvas.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VectorCanvas.swift; path = SmoothArtEditor/Models/VectorCanvas.swift; sourceTree = "<group>"; };
+		C6A92423BFD09E9901ABF9FF /* CharacterTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CharacterTemplate.swift; sourceTree = "<group>"; };
 		D76521F9181A917A315506B4 /* SmoothArtApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SmoothArtApp.swift; path = SmoothArtEditor/App/SmoothArtApp.swift; sourceTree = "<group>"; };
 		ED56E4E6F6356BC938371991 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
@@ -212,6 +220,8 @@
 				A2000006 /* ColorPaletteView.swift */,
 				A2000007 /* TopBarView.swift */,
 				A2000011 /* FrameTimelineView.swift */,
+				3535BD1F7F43AC93648B4158 /* SmoothCanvasUIView.swift */,
+				A97827FDD49AF4320929D44A /* SmoothCanvasView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -248,6 +258,8 @@
 				A200000F /* CanvasStore.swift */,
 				A2000010 /* AnimationStore.swift */,
 				A2000014 /* ProjectData.swift */,
+				25EFEA690F257DDB930E3101 /* VectorCanvas.swift */,
+				C6A92423BFD09E9901ABF9FF /* CharacterTemplate.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -381,6 +393,10 @@
 				A1000014 /* ProjectData.swift in Sources */,
 				A1000015 /* ProjectFileManager.swift in Sources */,
 				A1000016 /* ShapeRasterizer.swift in Sources */,
+				7BACB5C7CBB212DB23EF6FD4 /* SmoothCanvasUIView.swift in Sources */,
+				BC959A6BD21AFF6A7D9657E1 /* SmoothCanvasView.swift in Sources */,
+				8CC6FC8C9F54683B524C51BE /* VectorCanvas.swift in Sources */,
+				D793CB0474BCB659FEADDA5C /* CharacterTemplate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
