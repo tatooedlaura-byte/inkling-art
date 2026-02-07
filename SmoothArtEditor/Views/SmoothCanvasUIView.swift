@@ -115,6 +115,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         // Shape preview layer
         shapePreviewLayer.fillColor = nil
         shapePreviewLayer.lineCap = .round
+        shapePreviewLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
         contentView.layer.addSublayer(shapePreviewLayer)
 
         // Shape tool gesture
@@ -350,6 +351,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     // MARK: - Shape Tool
 
     @objc private func handleShapePan(_ gesture: UIPanGestureRecognizer) {
+        // Get location in contentView (where shapes are drawn)
         let location = gesture.location(in: contentView)
 
         switch gesture.state {
