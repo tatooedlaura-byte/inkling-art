@@ -21,6 +21,7 @@ struct TopBarView: View {
     @State private var showOpenPicker = false
     @State private var showPhotoPicker = false
     @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var showCloseConfirm = false
 
     var body: some View {
         HStack(spacing: 16) {
@@ -64,6 +65,10 @@ struct TopBarView: View {
                 }
                 Button("Export Sprite Sheet") {
                     exportSpriteSheet()
+                }
+                Divider()
+                Button("Close Project", role: .destructive) {
+                    showCloseConfirm = true
                 }
             } label: {
                 HStack(spacing: 4) {
@@ -206,6 +211,24 @@ struct TopBarView: View {
                 saveProject()
             }
         }
+        .alert("Close Project?", isPresented: $showCloseConfirm) {
+            Button("Save & Close") {
+                if projectName.isEmpty {
+                    saveName = ""
+                    showSaveNameAlert = true
+                } else {
+                    saveName = projectName
+                    saveProject()
+                }
+                closeProject()
+            }
+            Button("Close Without Saving", role: .destructive) {
+                closeProject()
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Do you want to save before closing?")
+        }
         .sheet(isPresented: $showOpenPicker) {
             DocumentPicker { url in
                 openProject(url: url)
@@ -232,6 +255,16 @@ struct TopBarView: View {
     }
 
     private func newProject() {
+        animationStore.initialize()
+        if let cv = canvasStore.canvasView {
+            cv.clearCanvas()
+            animationStore.loadFrameToCanvas(cv, index: 0)
+        }
+        projectName = ""
+        referenceImage = nil
+    }
+
+    private func closeProject() {
         animationStore.initialize()
         if let cv = canvasStore.canvasView {
             cv.clearCanvas()
