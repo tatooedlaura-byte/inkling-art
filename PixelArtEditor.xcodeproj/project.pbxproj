@@ -7,6 +7,22 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		092EAB885D62FBCEAB9DAF4F /* ToolbarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20576B5D6AAEB4CCF421B61C /* ToolbarView.swift */; };
+		0B37993A1F77D199F4B4509A /* VectorCanvas.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8D0FCFDC93E9B3D1B52510F /* VectorCanvas.swift */; };
+		0B7BFCE000E31D97AE18497F /* GIFExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48BF8B459C67C1A82FAD95E0 /* GIFExporter.swift */; };
+		2954901A08CF5379348BE7CC /* SpriteSheetExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E6FC198F250ECDD15E8049A /* SpriteSheetExporter.swift */; };
+		2A45BE8B60A95DF93A262C1B /* ProjectFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3734118F60129E9875E2E626 /* ProjectFileManager.swift */; };
+		2D60B40987AA6027210463D5 /* AnimationStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9AE67D4602FF5E4785EF8CF7 /* AnimationStore.swift */; };
+		2F1C016133F02C264F2927C2 /* ColorPaletteView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 14FD71C6A14077DB16296A0A /* ColorPaletteView.swift */; };
+		306F90ED6C8B8BC42C502255 /* FrameTimelineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E52B0BD4BB903ABBDF34B5D /* FrameTimelineView.swift */; };
+		327F712881D852727B04A5E7 /* CharacterTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3C62195FEDCA4E8A81E90737 /* CharacterTemplate.swift */; };
+		4242559D1342DC5998A7DAF8 /* ProjectData.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7660CF8F9CB41AE3EFE16D80 /* ProjectData.swift */; };
+		760ECA8CAC514BF5ACF243B8 /* Palette.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8949BCCC99BBEB6735EA44C9 /* Palette.swift */; };
+		7638F4CED87B5E46E52368B4 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ED56E4E6F6356BC938371991 /* Foundation.framework */; };
+		7D219B6618AAE5AF20EC27BF /* PNGExporter.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63891AED2810DF3A007BF4F3 /* PNGExporter.swift */; };
+		864A48AC1AC8FBDC6A280CB7 /* TopBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 10FC00928AA539BD548CF7E7 /* TopBarView.swift */; };
+		89D2392559C1C84E02DC4535 /* SmoothArtApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = D76521F9181A917A315506B4 /* SmoothArtApp.swift */; };
+		8A149434B2C6BB7BFED85DC4 /* Tool.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CC6E9219820DBC8B628495B /* Tool.swift */; };
 		A1000001 /* PixelArtApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000001 /* PixelArtApp.swift */; };
 		A1000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000002 /* ContentView.swift */; };
 		A1000003 /* CanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000003 /* CanvasView.swift */; };
@@ -29,9 +45,31 @@
 		A1000014 /* ProjectData.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000014 /* ProjectData.swift */; };
 		A1000015 /* ProjectFileManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000015 /* ProjectFileManager.swift */; };
 		A1000016 /* ShapeRasterizer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000016 /* ShapeRasterizer.swift */; };
+		C2933F58A1855EACB25AC47F /* CanvasStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F379B786AFEAB96599CFC6 /* CanvasStore.swift */; };
+		C51E9208B8ECE62F3C1D10C5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 39D7F38229A7F8B4BB68559F /* ContentView.swift */; };
+		CB11A71750843E19C4E5918E /* SmoothCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1D322C0675EF65F8C84C7327 /* SmoothCanvasView.swift */; };
+		D93D20C05627E0C7BA87755E /* SmoothCanvasUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4FE085D9892579F686AA0AEE /* SmoothCanvasUIView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		0E52B0BD4BB903ABBDF34B5D /* FrameTimelineView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = FrameTimelineView.swift; path = SmoothArtEditor/Views/FrameTimelineView.swift; sourceTree = "<group>"; };
+		10FC00928AA539BD548CF7E7 /* TopBarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = TopBarView.swift; path = SmoothArtEditor/Views/TopBarView.swift; sourceTree = "<group>"; };
+		14FD71C6A14077DB16296A0A /* ColorPaletteView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ColorPaletteView.swift; path = SmoothArtEditor/Views/ColorPaletteView.swift; sourceTree = "<group>"; };
+		1D322C0675EF65F8C84C7327 /* SmoothCanvasView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SmoothCanvasView.swift; path = SmoothArtEditor/Views/SmoothCanvasView.swift; sourceTree = "<group>"; };
+		1E6FC198F250ECDD15E8049A /* SpriteSheetExporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SpriteSheetExporter.swift; path = SmoothArtEditor/Utils/SpriteSheetExporter.swift; sourceTree = "<group>"; };
+		20576B5D6AAEB4CCF421B61C /* ToolbarView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ToolbarView.swift; path = SmoothArtEditor/Views/ToolbarView.swift; sourceTree = "<group>"; };
+		3734118F60129E9875E2E626 /* ProjectFileManager.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProjectFileManager.swift; path = SmoothArtEditor/Utils/ProjectFileManager.swift; sourceTree = "<group>"; };
+		39D7F38229A7F8B4BB68559F /* ContentView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ContentView.swift; path = SmoothArtEditor/Views/ContentView.swift; sourceTree = "<group>"; };
+		3C62195FEDCA4E8A81E90737 /* CharacterTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CharacterTemplate.swift; path = SmoothArtEditor/Models/CharacterTemplate.swift; sourceTree = "<group>"; };
+		48BF8B459C67C1A82FAD95E0 /* GIFExporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = GIFExporter.swift; path = SmoothArtEditor/Utils/GIFExporter.swift; sourceTree = "<group>"; };
+		4FE085D9892579F686AA0AEE /* SmoothCanvasUIView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SmoothCanvasUIView.swift; path = SmoothArtEditor/Views/SmoothCanvasUIView.swift; sourceTree = "<group>"; };
+		63891AED2810DF3A007BF4F3 /* PNGExporter.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = PNGExporter.swift; path = SmoothArtEditor/Utils/PNGExporter.swift; sourceTree = "<group>"; };
+		66F379B786AFEAB96599CFC6 /* CanvasStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = CanvasStore.swift; path = SmoothArtEditor/Models/CanvasStore.swift; sourceTree = "<group>"; };
+		6EBABA382DBF2C0D82187D6C /* SmoothArtEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SmoothArtEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		7660CF8F9CB41AE3EFE16D80 /* ProjectData.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = ProjectData.swift; path = SmoothArtEditor/Models/ProjectData.swift; sourceTree = "<group>"; };
+		8949BCCC99BBEB6735EA44C9 /* Palette.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Palette.swift; path = SmoothArtEditor/Models/Palette.swift; sourceTree = "<group>"; };
+		9AE67D4602FF5E4785EF8CF7 /* AnimationStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = AnimationStore.swift; path = SmoothArtEditor/Models/AnimationStore.swift; sourceTree = "<group>"; };
+		9CC6E9219820DBC8B628495B /* Tool.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = Tool.swift; path = SmoothArtEditor/Models/Tool.swift; sourceTree = "<group>"; };
 		A2000001 /* PixelArtApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PixelArtApp.swift; sourceTree = "<group>"; };
 		A2000002 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A2000003 /* CanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CanvasView.swift; sourceTree = "<group>"; };
@@ -55,9 +93,20 @@
 		A2000015 /* ProjectFileManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProjectFileManager.swift; sourceTree = "<group>"; };
 		A2000016 /* ShapeRasterizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRasterizer.swift; sourceTree = "<group>"; };
 		A3000001 /* PixelArtEditor.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PixelArtEditor.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B8D0FCFDC93E9B3D1B52510F /* VectorCanvas.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VectorCanvas.swift; path = SmoothArtEditor/Models/VectorCanvas.swift; sourceTree = "<group>"; };
+		D76521F9181A917A315506B4 /* SmoothArtApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SmoothArtApp.swift; path = SmoothArtEditor/App/SmoothArtApp.swift; sourceTree = "<group>"; };
+		ED56E4E6F6356BC938371991 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		7047C499B3247E0E50677D20 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				7638F4CED87B5E46E52368B4 /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		A4000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -68,11 +117,68 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		09C329A930035668CB936C98 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				66F379B786AFEAB96599CFC6 /* CanvasStore.swift */,
+				8949BCCC99BBEB6735EA44C9 /* Palette.swift */,
+				B8D0FCFDC93E9B3D1B52510F /* VectorCanvas.swift */,
+				9CC6E9219820DBC8B628495B /* Tool.swift */,
+				9AE67D4602FF5E4785EF8CF7 /* AnimationStore.swift */,
+				7660CF8F9CB41AE3EFE16D80 /* ProjectData.swift */,
+				3C62195FEDCA4E8A81E90737 /* CharacterTemplate.swift */,
+			);
+			name = Models;
+			sourceTree = "<group>";
+		};
+		392A387A496EA16DE8636CC8 /* SmoothArtEditor */ = {
+			isa = PBXGroup;
+			children = (
+				7B62811AF74E39E1C4FCC473 /* App */,
+				09C329A930035668CB936C98 /* Models */,
+				855163377B9892CED87F6599 /* Views */,
+				E486BFE857D6D5AF871D945D /* Utils */,
+			);
+			name = SmoothArtEditor;
+			sourceTree = "<group>";
+		};
+		7B62811AF74E39E1C4FCC473 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				D76521F9181A917A315506B4 /* SmoothArtApp.swift */,
+			);
+			name = App;
+			sourceTree = "<group>";
+		};
+		855163377B9892CED87F6599 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				4FE085D9892579F686AA0AEE /* SmoothCanvasUIView.swift */,
+				14FD71C6A14077DB16296A0A /* ColorPaletteView.swift */,
+				20576B5D6AAEB4CCF421B61C /* ToolbarView.swift */,
+				10FC00928AA539BD548CF7E7 /* TopBarView.swift */,
+				0E52B0BD4BB903ABBDF34B5D /* FrameTimelineView.swift */,
+				1D322C0675EF65F8C84C7327 /* SmoothCanvasView.swift */,
+				39D7F38229A7F8B4BB68559F /* ContentView.swift */,
+			);
+			name = Views;
+			sourceTree = "<group>";
+		};
+		86A55B33BD8012896793C603 /* iOS */ = {
+			isa = PBXGroup;
+			children = (
+				ED56E4E6F6356BC938371991 /* Foundation.framework */,
+			);
+			name = iOS;
+			sourceTree = "<group>";
+		};
 		A5000001 = {
 			isa = PBXGroup;
 			children = (
 				A5000002 /* PixelArtEditor */,
 				A5000006 /* Products */,
+				E3766B3A465D8F4B42F162D9 /* Frameworks */,
+				392A387A496EA16DE8636CC8 /* SmoothArtEditor */,
 			);
 			sourceTree = "<group>";
 		};
@@ -127,6 +233,7 @@
 			isa = PBXGroup;
 			children = (
 				A3000001 /* PixelArtEditor.app */,
+				6EBABA382DBF2C0D82187D6C /* SmoothArtEditor.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -143,6 +250,25 @@
 				A2000014 /* ProjectData.swift */,
 			);
 			path = Models;
+			sourceTree = "<group>";
+		};
+		E3766B3A465D8F4B42F162D9 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				86A55B33BD8012896793C603 /* iOS */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		E486BFE857D6D5AF871D945D /* Utils */ = {
+			isa = PBXGroup;
+			children = (
+				1E6FC198F250ECDD15E8049A /* SpriteSheetExporter.swift */,
+				48BF8B459C67C1A82FAD95E0 /* GIFExporter.swift */,
+				63891AED2810DF3A007BF4F3 /* PNGExporter.swift */,
+				3734118F60129E9875E2E626 /* ProjectFileManager.swift */,
+			);
+			name = Utils;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -165,6 +291,23 @@
 			productReference = A3000001 /* PixelArtEditor.app */;
 			productType = "com.apple.product-type.application";
 		};
+		C1F66AC15AD216F401EEE37A /* SmoothArtEditor */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A4486C53164C41DD2DA185D8 /* Build configuration list for PBXNativeTarget "SmoothArtEditor" */;
+			buildPhases = (
+				BF3757519624C23E49D95326 /* Sources */,
+				7047C499B3247E0E50677D20 /* Frameworks */,
+				C8045246FBFAA297B11EBEB1 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SmoothArtEditor;
+			productName = SmoothArtEditor;
+			productReference = 6EBABA382DBF2C0D82187D6C /* SmoothArtEditor.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -175,7 +318,7 @@
 				LastSwiftUpdateCheck = 1500;
 				LastUpgradeCheck = 1500;
 			};
-			buildConfigurationList = A8000001 /* Build configuration list for PBXProject "`" */;
+			buildConfigurationList = A8000001 /* Build configuration list for PBXProject "PixelArtEditor" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -189,6 +332,7 @@
 			projectRoot = "";
 			targets = (
 				A6000001 /* PixelArtEditor */,
+				C1F66AC15AD216F401EEE37A /* SmoothArtEditor */,
 			);
 		};
 /* End PBXProject section */
@@ -199,6 +343,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				A100000E /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		C8045246FBFAA297B11EBEB1 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -233,9 +384,63 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		BF3757519624C23E49D95326 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				89D2392559C1C84E02DC4535 /* SmoothArtApp.swift in Sources */,
+				2954901A08CF5379348BE7CC /* SpriteSheetExporter.swift in Sources */,
+				0B7BFCE000E31D97AE18497F /* GIFExporter.swift in Sources */,
+				7D219B6618AAE5AF20EC27BF /* PNGExporter.swift in Sources */,
+				2A45BE8B60A95DF93A262C1B /* ProjectFileManager.swift in Sources */,
+				C2933F58A1855EACB25AC47F /* CanvasStore.swift in Sources */,
+				760ECA8CAC514BF5ACF243B8 /* Palette.swift in Sources */,
+				0B37993A1F77D199F4B4509A /* VectorCanvas.swift in Sources */,
+				8A149434B2C6BB7BFED85DC4 /* Tool.swift in Sources */,
+				2D60B40987AA6027210463D5 /* AnimationStore.swift in Sources */,
+				4242559D1342DC5998A7DAF8 /* ProjectData.swift in Sources */,
+				D93D20C05627E0C7BA87755E /* SmoothCanvasUIView.swift in Sources */,
+				2F1C016133F02C264F2927C2 /* ColorPaletteView.swift in Sources */,
+				092EAB885D62FBCEAB9DAF4F /* ToolbarView.swift in Sources */,
+				864A48AC1AC8FBDC6A280CB7 /* TopBarView.swift in Sources */,
+				306F90ED6C8B8BC42C502255 /* FrameTimelineView.swift in Sources */,
+				CB11A71750843E19C4E5918E /* SmoothCanvasView.swift in Sources */,
+				C51E9208B8ECE62F3C1D10C5 /* ContentView.swift in Sources */,
+				327F712881D852727B04A5E7 /* CharacterTemplate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		903A28AECEAC7BF4ADFC8898 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5824UP464U;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.smoothart.editor;
+				PRODUCT_NAME = SmoothArtEditor;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+			};
+			name = Debug;
+		};
 		AA000001 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -343,10 +548,48 @@
 			};
 			name = Release;
 		};
+		AA98A6C2492C3DBC34CF71F3 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 5824UP464U;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_GENERATE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.smoothart.editor;
+				PRODUCT_NAME = SmoothArtEditor;
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 2;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A8000001 /* Build configuration list for PBXProject "`" */ = {
+		A4486C53164C41DD2DA185D8 /* Build configuration list for PBXNativeTarget "SmoothArtEditor" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA98A6C2492C3DBC34CF71F3 /* Release */,
+				903A28AECEAC7BF4ADFC8898 /* Debug */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A8000001 /* Build configuration list for PBXProject "PixelArtEditor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA000001 /* Debug */,

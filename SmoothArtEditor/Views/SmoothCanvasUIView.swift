@@ -3,6 +3,7 @@ import PencilKit
 
 protocol SmoothCanvasDelegate: AnyObject {
     func canvasDidChange()
+    func didPickColor(_ color: UIColor)
 }
 
 class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
@@ -21,6 +22,8 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     private var shapeStartPoint: CGPoint?
     private var shapeEndPoint: CGPoint?
     private var shapePanGesture: UIPanGestureRecognizer!
+    private var eyedropperTapGesture: UITapGestureRecognizer!
+    private var fillTapGesture: UITapGestureRecognizer!
 
     // Reference image
     private let referenceImageView = UIImageView()
@@ -120,6 +123,16 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         shapePanGesture.maximumNumberOfTouches = 1
         scrollView.addGestureRecognizer(shapePanGesture)
 
+        // Eyedropper tap gesture
+        eyedropperTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleEyedropperTap(_:)))
+        eyedropperTapGesture.isEnabled = false
+        scrollView.addGestureRecognizer(eyedropperTapGesture)
+
+        // Fill tap gesture
+        fillTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleFillTap(_:)))
+        fillTapGesture.isEnabled = false
+        scrollView.addGestureRecognizer(fillTapGesture)
+
         NSLayoutConstraint.activate([
             scrollView.topAnchor.constraint(equalTo: topAnchor),
             scrollView.leadingAnchor.constraint(equalTo: leadingAnchor),
@@ -215,6 +228,8 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
 
         case .eraser:
             pkCanvasView.tool = PKEraserTool(.vector)
@@ -222,13 +237,114 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
+
+        case .fill:
+            pkCanvasView.isUserInteractionEnabled = false
+            scrollView.isScrollEnabled = true
+            scrollView.pinchGestureRecognizer?.isEnabled = true
+            shapePanGesture.isEnabled = false
+            eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = true
+
+        case .eyedropper:
+            pkCanvasView.isUserInteractionEnabled = false
+            scrollView.isScrollEnabled = true
+            scrollView.pinchGestureRecognizer?.isEnabled = true
+            shapePanGesture.isEnabled = false
+            eyedropperTapGesture.isEnabled = true
+            fillTapGesture.isEnabled = false
 
         case .shape:
             pkCanvasView.isUserInteractionEnabled = false
             scrollView.isScrollEnabled = false
             scrollView.pinchGestureRecognizer?.isEnabled = false
             shapePanGesture.isEnabled = true
+            eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
         }
+    }
+
+    // MARK: - Eyedropper
+
+    @objc private func handleEyedropperTap(_ gesture: UITapGestureRecognizer) {
+        let location = gesture.location(in: contentView)
+
+        // Render the canvas to an image and sample the color at the tap point
+        let renderer = UIGraphicsImageRenderer(size: CGSize(width: canvasSize, height: canvasSize))
+        let image = renderer.image { context in
+            // Draw checkerboard
+            checkerboardView.layer.render(in: context.cgContext)
+            // Draw the PKDrawing
+            let drawingImage = pkCanvasView.drawing.image(from: CGRect(origin: .zero, size: CGSize(width: canvasSize, height: canvasSize)), scale: 1.0)
+            drawingImage.draw(at: .zero)
+        }
+
+        // Sample color at location
+        if let color = image.pixelColor(at: location) {
+            delegate?.didPickColor(color)
+        }
+    }
+
+    // MARK: - Fill Tool
+
+    @objc private func handleFillTap(_ gesture: UITapGestureRecognizer) {
+        // Fill creates a full-canvas rectangle with the current color
+        let rect = CGRect(origin: .zero, size: CGSize(width: canvasSize, height: canvasSize))
+
+        var strokePoints: [PKStrokePoint] = []
+        var time: Double = 0
+
+        func addPoint(_ point: CGPoint) {
+            let strokePoint = PKStrokePoint(
+                location: point,
+                timeOffset: time,
+                size: CGSize(width: 1, height: 1),
+                opacity: 1.0,
+                force: 1.0,
+                azimuth: 0,
+                altitude: .pi / 2
+            )
+            strokePoints.append(strokePoint)
+            time += 0.001
+        }
+
+        // Create a filled rectangle by drawing many horizontal lines
+        let step: CGFloat = 2
+        var y: CGFloat = 0
+        var goingRight = true
+
+        while y <= canvasSize {
+            if goingRight {
+                addPoint(CGPoint(x: 0, y: y))
+                addPoint(CGPoint(x: canvasSize, y: y))
+            } else {
+                addPoint(CGPoint(x: canvasSize, y: y))
+                addPoint(CGPoint(x: 0, y: y))
+            }
+            y += step
+            goingRight.toggle()
+        }
+
+        guard strokePoints.count >= 2 else { return }
+
+        let ink: PKInk
+        if #available(iOS 17.0, *) {
+            ink = PKInk(.monoline, color: currentColor)
+        } else {
+            ink = PKInk(.marker, color: currentColor)
+        }
+
+        let strokePath = PKStrokePath(controlPoints: strokePoints, creationDate: Date())
+        let stroke = PKStroke(ink: ink, path: strokePath)
+
+        var currentDrawing = pkCanvasView.drawing
+        // Insert at beginning so it's behind other strokes
+        currentDrawing.strokes.insert(stroke, at: 0)
+        pkCanvasView.drawing = currentDrawing
+
+        delegate?.canvasDidChange()
     }
 
     // MARK: - Shape Tool
@@ -500,5 +616,34 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
 
     func resetZoom() {
         scrollView.setZoomScale(1.0, animated: true)
+    }
+}
+
+// MARK: - UIImage Color Sampling Extension
+
+private extension UIImage {
+    func pixelColor(at point: CGPoint) -> UIColor? {
+        guard let cgImage = self.cgImage else { return nil }
+
+        let width = cgImage.width
+        let height = cgImage.height
+
+        guard point.x >= 0, point.x < CGFloat(width),
+              point.y >= 0, point.y < CGFloat(height) else { return nil }
+
+        guard let dataProvider = cgImage.dataProvider,
+              let pixelData = dataProvider.data else { return nil }
+
+        let data: UnsafePointer<UInt8> = CFDataGetBytePtr(pixelData)
+        let bytesPerPixel = 4
+        let bytesPerRow = cgImage.bytesPerRow
+        let pixelIndex = Int(point.y) * bytesPerRow + Int(point.x) * bytesPerPixel
+
+        let r = CGFloat(data[pixelIndex]) / 255.0
+        let g = CGFloat(data[pixelIndex + 1]) / 255.0
+        let b = CGFloat(data[pixelIndex + 2]) / 255.0
+        let a = CGFloat(data[pixelIndex + 3]) / 255.0
+
+        return UIColor(red: r, green: g, blue: b, alpha: a)
     }
 }
