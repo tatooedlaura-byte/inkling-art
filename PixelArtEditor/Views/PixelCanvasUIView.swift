@@ -41,6 +41,17 @@ class PixelCanvasUIView: UIView {
     private var activeTouchCount = 0
     private var multiTouchDetected = false
 
+    // Selection tool state
+    private var selectionStart: (row: Int, col: Int)?
+    private var selectionEnd: (row: Int, col: Int)?
+    private var selectionGridRect: (minRow: Int, minCol: Int, maxRow: Int, maxCol: Int)?
+    private var hasActiveSelection = false
+    private var isDrawingSelection = false
+    private var isMovingSelection = false
+    private var moveLastGridPos: (row: Int, col: Int)?
+    private var flippedPixels: [(row: Int, col: Int, color: UIColor)] = []
+    private var flipButton: UIButton?
+
     // Checkerboard tile
     private var checkerPattern: UIColor?
 
@@ -86,6 +97,21 @@ class PixelCanvasUIView: UIView {
         addGestureRecognizer(swipeRight)
 
         buildCheckerPattern()
+
+        // Flip button for selection tool
+        let btn = UIButton(type: .system)
+        btn.setTitle("Flip", for: .normal)
+        btn.setImage(UIImage(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right"), for: .normal)
+        btn.backgroundColor = UIColor.systemBlue
+        btn.setTitleColor(.white, for: .normal)
+        btn.tintColor = .white
+        btn.titleLabel?.font = .boldSystemFont(ofSize: 15)
+        btn.layer.cornerRadius = 8
+        btn.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
+        btn.addTarget(self, action: #selector(flipButtonTapped), for: .touchUpInside)
+        btn.isHidden = true
+        addSubview(btn)
+        flipButton = btn
     }
 
     private func buildCheckerPattern() {
@@ -144,6 +170,20 @@ class PixelCanvasUIView: UIView {
     }
 
     func performUndo() {
+        if hasActiveSelection || isMovingSelection {
+            // Discard flipped pixels without committing
+            flippedPixels = []
+            selectionStart = nil
+            selectionEnd = nil
+            selectionGridRect = nil
+            hasActiveSelection = false
+            isDrawingSelection = false
+            isMovingSelection = false
+            moveLastGridPos = nil
+            flipButton?.isHidden = true
+            setNeedsDisplay()
+            return
+        }
         guard let prev = undoStack.popLast() else { return }
         redoStack.append(grid)
         grid = prev
@@ -277,6 +317,36 @@ class PixelCanvasUIView: UIView {
             }
         }
 
+        // Flipped pixel preview (before committing)
+        if !flippedPixels.isEmpty {
+            for pixel in flippedPixels {
+                guard pixel.row >= 0, pixel.row < grid.height, pixel.col >= 0, pixel.col < grid.width else { continue }
+                ctx.setFillColor(pixel.color.cgColor)
+                ctx.fill(CGRect(x: origin.x + CGFloat(pixel.col) * cs,
+                                y: origin.y + CGFloat(pixel.row) * cs,
+                                width: cs, height: cs))
+            }
+        }
+
+        // Selection marquee
+        if let rect = selectionGridRect, (hasActiveSelection || isDrawingSelection) {
+            let selRect = CGRect(
+                x: origin.x + CGFloat(rect.minCol) * cs,
+                y: origin.y + CGFloat(rect.minRow) * cs,
+                width: CGFloat(rect.maxCol - rect.minCol + 1) * cs,
+                height: CGFloat(rect.maxRow - rect.minRow + 1) * cs
+            )
+            // Light blue fill
+            ctx.setFillColor(UIColor.systemBlue.withAlphaComponent(0.08).cgColor)
+            ctx.fill(selRect)
+            // Dashed blue stroke
+            ctx.setStrokeColor(UIColor.systemBlue.cgColor)
+            ctx.setLineWidth(2)
+            ctx.setLineDash(phase: 0, lengths: [6, 4])
+            ctx.stroke(selRect)
+            ctx.setLineDash(phase: 0, lengths: [])
+        }
+
         // Grid lines
         let gridAlpha = min(1.0, max(0, (canvasScale - 0.5) / 1.5))
         if gridAlpha > 0.01 {
@@ -351,6 +421,31 @@ class PixelCanvasUIView: UIView {
             pushUndo()
             redoStack.removeAll()
             setNeedsDisplay()
+
+        case .select:
+            if isMovingSelection, let rect = selectionGridRect {
+                // Check if tap is near the flipped pixels area
+                let moveRect = flippedPixelsBounds() ?? rect
+                if pos.row >= moveRect.minRow - 1 && pos.row <= moveRect.maxRow + 1 &&
+                   pos.col >= moveRect.minCol - 1 && pos.col <= moveRect.maxCol + 1 {
+                    moveLastGridPos = (pos.row, pos.col)
+                } else {
+                    commitFlippedPixels()
+                    clearSelection()
+                }
+            } else if hasActiveSelection {
+                // Tap outside clears
+                if let rect = selectionGridRect,
+                   (pos.row < rect.minRow || pos.row > rect.maxRow || pos.col < rect.minCol || pos.col > rect.maxCol) {
+                    clearSelection()
+                }
+            } else {
+                clearSelection()
+                selectionStart = (pos.row, pos.col)
+                selectionEnd = (pos.row, pos.col)
+                isDrawingSelection = true
+                setNeedsDisplay()
+            }
         }
     }
 
@@ -373,6 +468,23 @@ class PixelCanvasUIView: UIView {
         case .shape:
             shapeEnd = (pos.row, pos.col)
             setNeedsDisplay()
+        case .select:
+            if isMovingSelection, let last = moveLastGridPos {
+                let dRow = pos.row - last.row
+                let dCol = pos.col - last.col
+                if dRow != 0 || dCol != 0 {
+                    moveFlippedPixels(dRow: dRow, dCol: dCol)
+                    moveLastGridPos = (pos.row, pos.col)
+                    setNeedsDisplay()
+                }
+            } else if isDrawingSelection {
+                selectionEnd = (pos.row, pos.col)
+                if let start = selectionStart {
+                    selectionGridRect = (min(start.row, pos.row), min(start.col, pos.col),
+                                         max(start.row, pos.row), max(start.col, pos.col))
+                }
+                setNeedsDisplay()
+            }
         default:
             break
         }
@@ -386,6 +498,16 @@ class PixelCanvasUIView: UIView {
             isDrawingShape = false
             shapeStart = nil
             shapeEnd = nil
+            return
+        }
+
+        if currentTool == .select {
+            if isMovingSelection {
+                moveLastGridPos = nil
+            } else if isDrawingSelection {
+                isDrawingSelection = false
+                finalizeSelection()
+            }
             return
         }
 
@@ -414,6 +536,130 @@ class PixelCanvasUIView: UIView {
         shapeStart = nil
         shapeEnd = nil
         strokeStartGrid = nil
+        setNeedsDisplay()
+    }
+
+    // MARK: - Selection Tool
+
+    private func finalizeSelection() {
+        guard let start = selectionStart, let end = selectionEnd else {
+            clearSelection()
+            return
+        }
+
+        let minRow = min(start.row, end.row)
+        let maxRow = max(start.row, end.row)
+        let minCol = min(start.col, end.col)
+        let maxCol = max(start.col, end.col)
+
+        // Skip tiny selections
+        guard maxRow - minRow >= 1 || maxCol - minCol >= 1 else {
+            clearSelection()
+            return
+        }
+
+        // Check if any pixels exist in selection
+        var hasPixels = false
+        for row in minRow...maxRow {
+            for col in minCol...maxCol {
+                if grid[row, col] != nil {
+                    hasPixels = true
+                    break
+                }
+            }
+            if hasPixels { break }
+        }
+
+        guard hasPixels else {
+            clearSelection()
+            return
+        }
+
+        selectionGridRect = (minRow, minCol, maxRow, maxCol)
+        hasActiveSelection = true
+        showFlipButton()
+    }
+
+    private func showFlipButton() {
+        guard let rect = selectionGridRect, let btn = flipButton else { return }
+        let origin = gridOrigin
+        let cs = cellSize
+        let selMidX = origin.x + (CGFloat(rect.minCol) + CGFloat(rect.maxCol - rect.minCol + 1) / 2) * cs
+        let selBottomY = origin.y + CGFloat(rect.maxRow + 1) * cs + 12
+        btn.sizeToFit()
+        btn.frame = CGRect(x: selMidX - btn.frame.width / 2, y: selBottomY,
+                           width: btn.frame.width, height: btn.frame.height)
+        btn.isHidden = false
+    }
+
+    @objc private func flipButtonTapped() {
+        flipSelectionHorizontally()
+    }
+
+    private func flipSelectionHorizontally() {
+        guard let rect = selectionGridRect else { return }
+
+        pushUndo()
+        redoStack.removeAll()
+
+        // Collect pixels from selection and create flipped copies
+        let selWidth = rect.maxCol - rect.minCol + 1
+        flippedPixels = []
+
+        for row in rect.minRow...rect.maxRow {
+            for col in rect.minCol...rect.maxCol {
+                if let color = grid[row, col] {
+                    let flippedCol = rect.minCol + (selWidth - 1) - (col - rect.minCol)
+                    flippedPixels.append((row: row, col: flippedCol, color: color))
+                }
+            }
+        }
+
+        // Enter move mode
+        isMovingSelection = true
+        hasActiveSelection = false
+        flipButton?.isHidden = true
+        setNeedsDisplay()
+    }
+
+    private func moveFlippedPixels(dRow: Int, dCol: Int) {
+        flippedPixels = flippedPixels.map { (row: $0.row + dRow, col: $0.col + dCol, color: $0.color) }
+        if let rect = selectionGridRect {
+            selectionGridRect = (rect.minRow + dRow, rect.minCol + dCol, rect.maxRow + dRow, rect.maxCol + dCol)
+        }
+    }
+
+    private func flippedPixelsBounds() -> (minRow: Int, minCol: Int, maxRow: Int, maxCol: Int)? {
+        guard !flippedPixels.isEmpty else { return nil }
+        let rows = flippedPixels.map { $0.row }
+        let cols = flippedPixels.map { $0.col }
+        return (rows.min()!, cols.min()!, rows.max()!, cols.max()!)
+    }
+
+    private func commitFlippedPixels() {
+        guard !flippedPixels.isEmpty else { return }
+        for pixel in flippedPixels {
+            guard pixel.row >= 0, pixel.row < grid.height, pixel.col >= 0, pixel.col < grid.width else { continue }
+            grid[pixel.row, pixel.col] = pixel.color
+        }
+        flippedPixels = []
+        setNeedsDisplay()
+        delegate?.canvasDidChange()
+    }
+
+    private func clearSelection() {
+        if isMovingSelection && !flippedPixels.isEmpty {
+            commitFlippedPixels()
+        }
+        selectionStart = nil
+        selectionEnd = nil
+        selectionGridRect = nil
+        hasActiveSelection = false
+        isDrawingSelection = false
+        isMovingSelection = false
+        moveLastGridPos = nil
+        flippedPixels = []
+        flipButton?.isHidden = true
         setNeedsDisplay()
     }
 

@@ -107,14 +107,6 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		7047C499B3247E0E50677D20 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				7638F4CED87B5E46E52368B4 /* Foundation.framework in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		A4000001 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -303,23 +295,6 @@
 			productReference = A3000001 /* PixelArtEditor.app */;
 			productType = "com.apple.product-type.application";
 		};
-		C1F66AC15AD216F401EEE37A /* SmoothArtEditor */ = {
-			isa = PBXNativeTarget;
-			buildConfigurationList = A4486C53164C41DD2DA185D8 /* Build configuration list for PBXNativeTarget "SmoothArtEditor" */;
-			buildPhases = (
-				BF3757519624C23E49D95326 /* Sources */,
-				7047C499B3247E0E50677D20 /* Frameworks */,
-				C8045246FBFAA297B11EBEB1 /* Resources */,
-			);
-			buildRules = (
-			);
-			dependencies = (
-			);
-			name = SmoothArtEditor;
-			productName = SmoothArtEditor;
-			productReference = 6EBABA382DBF2C0D82187D6C /* SmoothArtEditor.app */;
-			productType = "com.apple.product-type.application";
-		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -344,7 +319,6 @@
 			projectRoot = "";
 			targets = (
 				A6000001 /* PixelArtEditor */,
-				C1F66AC15AD216F401EEE37A /* SmoothArtEditor */,
 			);
 		};
 /* End PBXProject section */
@@ -355,13 +329,6 @@
 			buildActionMask = 2147483647;
 			files = (
 				A100000E /* Assets.xcassets in Resources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		C8045246FBFAA297B11EBEB1 /* Resources */ = {
-			isa = PBXResourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -397,32 +364,6 @@
 				BC959A6BD21AFF6A7D9657E1 /* SmoothCanvasView.swift in Sources */,
 				8CC6FC8C9F54683B524C51BE /* VectorCanvas.swift in Sources */,
 				D793CB0474BCB659FEADDA5C /* CharacterTemplate.swift in Sources */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		BF3757519624C23E49D95326 /* Sources */ = {
-			isa = PBXSourcesBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				89D2392559C1C84E02DC4535 /* SmoothArtApp.swift in Sources */,
-				2954901A08CF5379348BE7CC /* SpriteSheetExporter.swift in Sources */,
-				0B7BFCE000E31D97AE18497F /* GIFExporter.swift in Sources */,
-				7D219B6618AAE5AF20EC27BF /* PNGExporter.swift in Sources */,
-				2A45BE8B60A95DF93A262C1B /* ProjectFileManager.swift in Sources */,
-				C2933F58A1855EACB25AC47F /* CanvasStore.swift in Sources */,
-				760ECA8CAC514BF5ACF243B8 /* Palette.swift in Sources */,
-				0B37993A1F77D199F4B4509A /* VectorCanvas.swift in Sources */,
-				8A149434B2C6BB7BFED85DC4 /* Tool.swift in Sources */,
-				2D60B40987AA6027210463D5 /* AnimationStore.swift in Sources */,
-				4242559D1342DC5998A7DAF8 /* ProjectData.swift in Sources */,
-				D93D20C05627E0C7BA87755E /* SmoothCanvasUIView.swift in Sources */,
-				2F1C016133F02C264F2927C2 /* ColorPaletteView.swift in Sources */,
-				092EAB885D62FBCEAB9DAF4F /* ToolbarView.swift in Sources */,
-				864A48AC1AC8FBDC6A280CB7 /* TopBarView.swift in Sources */,
-				306F90ED6C8B8BC42C502255 /* FrameTimelineView.swift in Sources */,
-				CB11A71750843E19C4E5918E /* SmoothCanvasView.swift in Sources */,
-				C51E9208B8ECE62F3C1D10C5 /* ContentView.swift in Sources */,
-				327F712881D852727B04A5E7 /* CharacterTemplate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -596,15 +537,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A4486C53164C41DD2DA185D8 /* Build configuration list for PBXNativeTarget "SmoothArtEditor" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AA98A6C2492C3DBC34CF71F3 /* Release */,
-				903A28AECEAC7BF4ADFC8898 /* Debug */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		A8000001 /* Build configuration list for PBXProject "PixelArtEditor" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (

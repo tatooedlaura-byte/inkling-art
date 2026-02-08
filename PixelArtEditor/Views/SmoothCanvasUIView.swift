@@ -24,8 +24,26 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     private var shapeStartPoint: CGPoint?
     private var shapeEndPoint: CGPoint?
     private var shapePanGesture: UIPanGestureRecognizer!
+    private var shapeConfirmTapGesture: UITapGestureRecognizer!
+    private var shapePendingCommit = false
+    private var isMovingShape = false
+    private var lastPanLocation: CGPoint?
     private var eyedropperTapGesture: UITapGestureRecognizer!
     private var fillTapGesture: UITapGestureRecognizer!
+
+    // Selection tool state
+    private var selectionPanGesture: UIPanGestureRecognizer!
+    private var selectionTapGesture: UITapGestureRecognizer!
+    private let selectionPreviewLayer = CAShapeLayer()
+    private var selectionStartPoint: CGPoint?
+    private var selectionEndPoint: CGPoint?
+    private var selectionRect: CGRect?
+    private var selectedStrokeIndices: [Int] = []
+    private var hasActiveSelection = false
+    private var isMovingSelection = false
+    private var movingStrokeIndices: [Int] = []
+    private var lastSelectionPanLocation: CGPoint?
+    private var flipButton: UIButton!
 
     // Reference image
     private let referenceImageView = UIImageView()
@@ -53,6 +71,13 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
 
     var currentTool: Tool = .pencil {
         didSet {
+            if shapePendingCommit {
+                commitShape()
+                clearShapePendingState()
+            }
+            if hasActiveSelection {
+                clearSelection()
+            }
             updateTool()
             shapePreviewLayer.path = nil
             isDrawingShape = false
@@ -120,11 +145,24 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         shapePreviewLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
         contentView.layer.addSublayer(shapePreviewLayer)
 
+        // Selection preview layer
+        selectionPreviewLayer.strokeColor = UIColor.systemBlue.cgColor
+        selectionPreviewLayer.lineWidth = 2
+        selectionPreviewLayer.lineDashPattern = [6, 4]
+        selectionPreviewLayer.fillColor = UIColor.systemBlue.withAlphaComponent(0.08).cgColor
+        selectionPreviewLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
+        contentView.layer.addSublayer(selectionPreviewLayer)
+
         // Shape tool gesture
         shapePanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleShapePan(_:)))
         shapePanGesture.isEnabled = false
         shapePanGesture.maximumNumberOfTouches = 1
         scrollView.addGestureRecognizer(shapePanGesture)
+
+        // Shape confirm tap gesture
+        shapeConfirmTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleShapeConfirmTap(_:)))
+        shapeConfirmTapGesture.isEnabled = false
+        scrollView.addGestureRecognizer(shapeConfirmTapGesture)
 
         // Eyedropper tap gesture
         eyedropperTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleEyedropperTap(_:)))
@@ -135,6 +173,31 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         fillTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleFillTap(_:)))
         fillTapGesture.isEnabled = false
         scrollView.addGestureRecognizer(fillTapGesture)
+
+        // Selection pan gesture
+        selectionPanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleSelectionPan(_:)))
+        selectionPanGesture.isEnabled = false
+        selectionPanGesture.maximumNumberOfTouches = 1
+        scrollView.addGestureRecognizer(selectionPanGesture)
+
+        // Selection tap gesture (tap outside to deselect)
+        selectionTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleSelectionTap(_:)))
+        selectionTapGesture.isEnabled = false
+        scrollView.addGestureRecognizer(selectionTapGesture)
+
+        // Flip button
+        flipButton = UIButton(type: .system)
+        flipButton.setTitle("Flip", for: .normal)
+        flipButton.setImage(UIImage(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right"), for: .normal)
+        flipButton.backgroundColor = UIColor.systemBlue
+        flipButton.setTitleColor(.white, for: .normal)
+        flipButton.tintColor = .white
+        flipButton.titleLabel?.font = .boldSystemFont(ofSize: 15)
+        flipButton.layer.cornerRadius = 8
+        flipButton.contentEdgeInsets = UIEdgeInsets(top: 8, left: 14, bottom: 8, right: 14)
+        flipButton.addTarget(self, action: #selector(flipButtonTapped), for: .touchUpInside)
+        flipButton.isHidden = true
+        contentView.addSubview(flipButton)
 
         contentWidthConstraint = contentView.widthAnchor.constraint(equalToConstant: canvasSize)
         contentHeightConstraint = contentView.heightAnchor.constraint(equalToConstant: canvasSize)
@@ -234,8 +297,11 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = false
+            selectionPanGesture.isEnabled = false
+            selectionTapGesture.isEnabled = false
 
         case .eraser:
             pkCanvasView.tool = PKEraserTool(.vector)
@@ -243,32 +309,55 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = false
+            selectionPanGesture.isEnabled = false
+            selectionTapGesture.isEnabled = false
 
         case .fill:
             pkCanvasView.isUserInteractionEnabled = false
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = true
+            selectionPanGesture.isEnabled = false
+            selectionTapGesture.isEnabled = false
 
         case .eyedropper:
             pkCanvasView.isUserInteractionEnabled = false
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = true
             fillTapGesture.isEnabled = false
+            selectionPanGesture.isEnabled = false
+            selectionTapGesture.isEnabled = false
 
         case .shape:
             pkCanvasView.isUserInteractionEnabled = false
             scrollView.isScrollEnabled = false
             scrollView.pinchGestureRecognizer?.isEnabled = false
             shapePanGesture.isEnabled = true
+            shapeConfirmTapGesture.isEnabled = true
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = false
+            selectionPanGesture.isEnabled = false
+            selectionTapGesture.isEnabled = false
+
+        case .select:
+            pkCanvasView.isUserInteractionEnabled = false
+            scrollView.isScrollEnabled = false
+            scrollView.pinchGestureRecognizer?.isEnabled = false
+            shapePanGesture.isEnabled = false
+            shapeConfirmTapGesture.isEnabled = false
+            eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
+            selectionPanGesture.isEnabled = true
+            selectionTapGesture.isEnabled = true
         }
     }
 
@@ -345,10 +434,10 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         let strokePath = PKStrokePath(controlPoints: strokePoints, creationDate: Date())
         let stroke = PKStroke(ink: ink, path: strokePath)
 
-        var currentDrawing = pkCanvasView.drawing
+        var newDrawing = pkCanvasView.drawing
         // Insert at beginning so it's behind other strokes
-        currentDrawing.strokes.insert(stroke, at: 0)
-        pkCanvasView.drawing = currentDrawing
+        newDrawing.strokes.insert(stroke, at: 0)
+        setDrawingWithUndo(newDrawing)
 
         delegate?.canvasDidChange()
     }
@@ -356,33 +445,95 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     // MARK: - Shape Tool
 
     @objc private func handleShapePan(_ gesture: UIPanGestureRecognizer) {
-        // Get location in contentView (where shapes are drawn)
         let location = gesture.location(in: contentView)
 
         switch gesture.state {
         case .began:
-            shapeStartPoint = location
-            shapeEndPoint = location
-            isDrawingShape = true
-            updateShapePreview()
+            if shapePendingCommit, isPointNearShape(location) {
+                // Start moving the pending shape
+                isMovingShape = true
+                lastPanLocation = location
+            } else {
+                // Commit any pending shape, then start drawing a new one
+                if shapePendingCommit {
+                    commitShape()
+                    clearShapePendingState()
+                }
+                shapeStartPoint = location
+                shapeEndPoint = location
+                isDrawingShape = true
+                isMovingShape = false
+                updateShapePreview()
+            }
 
         case .changed:
-            shapeEndPoint = location
-            updateShapePreview()
+            if isMovingShape, let last = lastPanLocation,
+               let start = shapeStartPoint, let end = shapeEndPoint {
+                let dx = location.x - last.x
+                let dy = location.y - last.y
+                shapeStartPoint = CGPoint(x: start.x + dx, y: start.y + dy)
+                shapeEndPoint = CGPoint(x: end.x + dx, y: end.y + dy)
+                lastPanLocation = location
+                updateShapePreview()
+            } else {
+                shapeEndPoint = location
+                updateShapePreview()
+            }
 
         case .ended:
-            shapeEndPoint = location
-            commitShape()
-            isDrawingShape = false
-            shapePreviewLayer.path = nil
+            if isMovingShape {
+                // Finished moving — keep as pending
+                isMovingShape = false
+                lastPanLocation = nil
+            } else {
+                // Finished drawing — enter pending state
+                shapeEndPoint = location
+                updateShapePreview()
+                isDrawingShape = false
+                shapePendingCommit = true
+            }
 
         case .cancelled, .failed:
-            isDrawingShape = false
-            shapePreviewLayer.path = nil
+            if isMovingShape {
+                isMovingShape = false
+                lastPanLocation = nil
+            } else {
+                isDrawingShape = false
+                shapePreviewLayer.path = nil
+                clearShapePendingState()
+            }
 
         default:
             break
         }
+    }
+
+    @objc private func handleShapeConfirmTap(_ gesture: UITapGestureRecognizer) {
+        guard shapePendingCommit else { return }
+        commitShape()
+        clearShapePendingState()
+    }
+
+    private func clearShapePendingState() {
+        shapePendingCommit = false
+        isMovingShape = false
+        lastPanLocation = nil
+        shapePreviewLayer.path = nil
+    }
+
+    private func shapeBoundingBox() -> CGRect? {
+        guard let start = shapeStartPoint, let end = shapeEndPoint else { return nil }
+        let constrained = constrainedEnd(start: start, end: end)
+        return CGRect(x: min(start.x, constrained.x),
+                      y: min(start.y, constrained.y),
+                      width: abs(constrained.x - start.x),
+                      height: abs(constrained.y - start.y))
+    }
+
+    private func isPointNearShape(_ point: CGPoint) -> Bool {
+        guard let bbox = shapeBoundingBox() else { return false }
+        let padding: CGFloat = 30
+        return bbox.insetBy(dx: -padding, dy: -padding).contains(point)
     }
 
     private func constrainedEnd(start: CGPoint, end: CGPoint) -> CGPoint {
@@ -559,16 +710,292 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         let strokePath = PKStrokePath(controlPoints: strokePoints, creationDate: Date())
         let stroke = PKStroke(ink: ink, path: strokePath)
 
-        var currentDrawing = pkCanvasView.drawing
-        currentDrawing.strokes.append(stroke)
-        pkCanvasView.drawing = currentDrawing
+        var newDrawing = pkCanvasView.drawing
+        newDrawing.strokes.append(stroke)
+        setDrawingWithUndo(newDrawing)
 
         delegate?.canvasDidChange()
     }
 
+    // MARK: - Selection Tool
+
+    @objc private func handleSelectionPan(_ gesture: UIPanGestureRecognizer) {
+        let location = gesture.location(in: contentView)
+
+        switch gesture.state {
+        case .began:
+            if isMovingSelection, let rect = selectionRect, rect.insetBy(dx: -30, dy: -30).contains(location) {
+                // Continue moving the flipped copies
+                lastSelectionPanLocation = location
+            } else if isMovingSelection {
+                // Started dragging outside — finalize move, start new selection
+                finalizeMove()
+                selectionStartPoint = location
+                selectionEndPoint = location
+            } else {
+                clearSelection()
+                selectionStartPoint = location
+                selectionEndPoint = location
+            }
+
+        case .changed:
+            if isMovingSelection, let last = lastSelectionPanLocation {
+                let dx = location.x - last.x
+                let dy = location.y - last.y
+                moveFlippedStrokes(dx: dx, dy: dy)
+                lastSelectionPanLocation = location
+            } else {
+                selectionEndPoint = location
+                updateSelectionPreview()
+            }
+
+        case .ended:
+            if isMovingSelection {
+                lastSelectionPanLocation = nil
+            } else {
+                selectionEndPoint = location
+                updateSelectionPreview()
+                finalizeSelection()
+            }
+
+        case .cancelled, .failed:
+            if isMovingSelection {
+                lastSelectionPanLocation = nil
+            } else {
+                clearSelection()
+            }
+
+        default:
+            break
+        }
+    }
+
+    @objc private func handleSelectionTap(_ gesture: UITapGestureRecognizer) {
+        if isMovingSelection {
+            let location = gesture.location(in: contentView)
+            if let rect = selectionRect, !rect.insetBy(dx: -30, dy: -30).contains(location) {
+                finalizeMove()
+            }
+        } else if hasActiveSelection {
+            let location = gesture.location(in: contentView)
+            if let rect = selectionRect, !rect.contains(location) {
+                clearSelection()
+            }
+        }
+    }
+
+    @objc private func flipButtonTapped() {
+        flipSelectionHorizontally()
+    }
+
+    private func updateSelectionPreview() {
+        guard let start = selectionStartPoint, let end = selectionEndPoint else { return }
+        let rect = CGRect(x: min(start.x, end.x),
+                          y: min(start.y, end.y),
+                          width: abs(end.x - start.x),
+                          height: abs(end.y - start.y))
+        selectionPreviewLayer.path = UIBezierPath(rect: rect).cgPath
+    }
+
+    private func finalizeSelection() {
+        guard let start = selectionStartPoint, let end = selectionEndPoint else {
+            clearSelection()
+            return
+        }
+
+        let rect = CGRect(x: min(start.x, end.x),
+                          y: min(start.y, end.y),
+                          width: abs(end.x - start.x),
+                          height: abs(end.y - start.y))
+
+        // Skip tiny rects (accidental drags)
+        guard rect.width >= 10, rect.height >= 10 else {
+            clearSelection()
+            return
+        }
+
+        selectionRect = rect
+
+        // Find strokes inside the selection
+        let strokes = pkCanvasView.drawing.strokes
+        var indices: [Int] = []
+
+        for (index, stroke) in strokes.enumerated() {
+            let bounds = stroke.renderBounds
+            // Check if stroke bounds are fully contained or intersect with any control point inside
+            if rect.contains(bounds) {
+                indices.append(index)
+            } else if rect.intersects(bounds) {
+                // Check if any control point is inside the selection
+                var hasPointInside = false
+                for point in stroke.path {
+                    if rect.contains(point.location) {
+                        hasPointInside = true
+                        break
+                    }
+                }
+                if hasPointInside {
+                    indices.append(index)
+                }
+            }
+        }
+
+        if indices.isEmpty {
+            clearSelection()
+            return
+        }
+
+        selectedStrokeIndices = indices
+        hasActiveSelection = true
+        showFlipButton(below: rect)
+    }
+
+    private func showFlipButton(below rect: CGRect) {
+        flipButton.isHidden = false
+        flipButton.sizeToFit()
+        let buttonWidth = flipButton.frame.width
+        let buttonX = rect.midX - buttonWidth / 2
+        let buttonY = rect.maxY + 12
+        flipButton.frame = CGRect(x: buttonX, y: buttonY, width: buttonWidth, height: flipButton.frame.height)
+    }
+
+    private func clearSelection() {
+        selectionPreviewLayer.path = nil
+        selectionStartPoint = nil
+        selectionEndPoint = nil
+        selectionRect = nil
+        selectedStrokeIndices = []
+        hasActiveSelection = false
+        isMovingSelection = false
+        movingStrokeIndices = []
+        lastSelectionPanLocation = nil
+        flipButton.isHidden = true
+    }
+
+    private func flipSelectionHorizontally() {
+        guard let rect = selectionRect, !selectedStrokeIndices.isEmpty else { return }
+
+        let midX = rect.midX
+        var newDrawing = pkCanvasView.drawing
+        var newIndices: [Int] = []
+
+        // Create flipped copies of selected strokes, keeping originals
+        for index in selectedStrokeIndices {
+            guard index < newDrawing.strokes.count else { continue }
+            let stroke = newDrawing.strokes[index]
+
+            var flippedPoints: [PKStrokePoint] = []
+            for point in stroke.path {
+                let flippedX = 2 * midX - point.location.x
+                let flippedLocation = CGPoint(x: flippedX, y: point.location.y)
+                let flippedPoint = PKStrokePoint(
+                    location: flippedLocation,
+                    timeOffset: point.timeOffset,
+                    size: point.size,
+                    opacity: point.opacity,
+                    force: point.force,
+                    azimuth: point.azimuth,
+                    altitude: point.altitude
+                )
+                flippedPoints.append(flippedPoint)
+            }
+
+            guard flippedPoints.count >= 2 else { continue }
+
+            let newPath = PKStrokePath(controlPoints: flippedPoints, creationDate: Date())
+            let flippedStroke = PKStroke(ink: stroke.ink, path: newPath)
+            newIndices.append(newDrawing.strokes.count)
+            newDrawing.strokes.append(flippedStroke)
+        }
+
+        setDrawingWithUndo(newDrawing)
+        delegate?.canvasDidChange()
+
+        // Enter move mode so user can reposition the copies
+        movingStrokeIndices = newIndices
+        isMovingSelection = true
+        selectedStrokeIndices = []
+        flipButton.isHidden = true
+        updateMovingSelectionPreview()
+    }
+
+    private func moveFlippedStrokes(dx: CGFloat, dy: CGFloat) {
+        let offset = CGVector(dx: dx, dy: dy)
+        var newDrawing = pkCanvasView.drawing
+
+        for index in movingStrokeIndices {
+            guard index < newDrawing.strokes.count else { continue }
+            let stroke = newDrawing.strokes[index]
+
+            var movedPoints: [PKStrokePoint] = []
+            for point in stroke.path {
+                let movedLocation = CGPoint(x: point.location.x + offset.dx, y: point.location.y + offset.dy)
+                let movedPoint = PKStrokePoint(
+                    location: movedLocation,
+                    timeOffset: point.timeOffset,
+                    size: point.size,
+                    opacity: point.opacity,
+                    force: point.force,
+                    azimuth: point.azimuth,
+                    altitude: point.altitude
+                )
+                movedPoints.append(movedPoint)
+            }
+
+            guard movedPoints.count >= 2 else { continue }
+
+            let newPath = PKStrokePath(controlPoints: movedPoints, creationDate: Date())
+            let movedStroke = PKStroke(ink: stroke.ink, path: newPath)
+            newDrawing.strokes[index] = movedStroke
+        }
+
+        // Shift selection rect too
+        if let rect = selectionRect {
+            selectionRect = rect.offsetBy(dx: dx, dy: dy)
+        }
+
+        pkCanvasView.drawing = newDrawing
+        delegate?.canvasDidChange()
+        updateMovingSelectionPreview()
+    }
+
+    private func updateMovingSelectionPreview() {
+        // Show dashed rect around the flipped copies
+        guard let rect = selectionRect else { return }
+        selectionPreviewLayer.path = UIBezierPath(rect: rect).cgPath
+    }
+
+    private func finalizeMove() {
+        // Register the full change for undo (from before flip to now)
+        let finalDrawing = pkCanvasView.drawing
+        setDrawingWithUndo(finalDrawing)
+        isMovingSelection = false
+        movingStrokeIndices = []
+        lastSelectionPanLocation = nil
+        clearSelection()
+    }
+
     // MARK: - Undo/Redo
 
+    private func setDrawingWithUndo(_ newDrawing: PKDrawing) {
+        let oldDrawing = pkCanvasView.drawing
+        pkCanvasView.undoManager?.registerUndo(withTarget: self) { target in
+            target.setDrawingWithUndo(oldDrawing)
+        }
+        pkCanvasView.drawing = newDrawing
+    }
+
     func performUndo() {
+        if hasActiveSelection {
+            clearSelection()
+            return
+        }
+        if shapePendingCommit {
+            clearShapePendingState()
+            shapeStartPoint = nil
+            shapeEndPoint = nil
+            return
+        }
         pkCanvasView.undoManager?.undo()
     }
 
@@ -625,11 +1052,14 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         scrollView.setZoomScale(1.0, animated: true)
     }
 
+    // MARK: - Canvas Size
+
     func changeCanvasSize(_ newSize: CGFloat) {
         canvasSize = newSize
         contentWidthConstraint?.constant = newSize
         contentHeightConstraint?.constant = newSize
         shapePreviewLayer.frame = CGRect(x: 0, y: 0, width: newSize, height: newSize)
+        selectionPreviewLayer.frame = CGRect(x: 0, y: 0, width: newSize, height: newSize)
         scrollView.contentSize = CGSize(width: newSize, height: newSize)
         checkerboardView.backgroundColor = buildCheckerPattern()
         layoutIfNeeded()
