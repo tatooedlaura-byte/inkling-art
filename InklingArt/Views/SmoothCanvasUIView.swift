@@ -393,7 +393,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             selectionTapGesture.isEnabled = false
 
         case .eraser:
-            pkCanvasView.tool = PKEraserTool(.vector)
+            pkCanvasView.tool = PKEraserTool(.bitmap)
             pkCanvasView.isUserInteractionEnabled = true
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
