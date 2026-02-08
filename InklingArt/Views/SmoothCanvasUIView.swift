@@ -155,6 +155,8 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         // Below layers (rendered beneath active layer)
         contentView.addSubview(belowLayersImageView)
         belowLayersImageView.contentMode = .scaleToFill
+        belowLayersImageView.backgroundColor = .clear
+        belowLayersImageView.isOpaque = false
         belowLayersImageView.translatesAutoresizingMaskIntoConstraints = false
 
         // PencilKit canvas
@@ -170,6 +172,8 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         // Above layers (rendered above active layer)
         contentView.addSubview(aboveLayersImageView)
         aboveLayersImageView.contentMode = .scaleToFill
+        aboveLayersImageView.backgroundColor = .clear
+        aboveLayersImageView.isOpaque = false
         aboveLayersImageView.isUserInteractionEnabled = false
         aboveLayersImageView.translatesAutoresizingMaskIntoConstraints = false
 
@@ -713,15 +717,26 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
 
         switch gesture.state {
         case .began:
-            if isMovingSelection, let rect = selectionRect, rect.insetBy(dx: -30, dy: -30).contains(location) {
-                // Continue moving the flipped copies
+            if hasActiveSelection, let rect = selectionRect, rect.insetBy(dx: -30, dy: -30).contains(location) {
+                // Start moving the selected strokes
+                isMovingSelection = true
+                movingStrokeIndices = selectedStrokeIndices
+                lastSelectionPanLocation = location
+            } else if isMovingSelection, let rect = selectionRect, rect.insetBy(dx: -30, dy: -30).contains(location) {
+                // Continue moving
                 lastSelectionPanLocation = location
             } else if isMovingSelection {
                 // Started dragging outside — finalize move, start new selection
                 finalizeMove()
                 selectionStartPoint = location
                 selectionEndPoint = location
+            } else if hasActiveSelection {
+                // Has selection but tapped outside - clear and start new
+                clearSelection()
+                selectionStartPoint = location
+                selectionEndPoint = location
             } else {
+                // No selection - start new selection
                 clearSelection()
                 selectionStartPoint = location
                 selectionEndPoint = location
@@ -731,7 +746,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             if isMovingSelection, let last = lastSelectionPanLocation {
                 let dx = location.x - last.x
                 let dy = location.y - last.y
-                moveFlippedStrokes(dx: dx, dy: dy)
+                moveSelectedStrokes(dx: dx, dy: dy)
                 lastSelectionPanLocation = location
             } else {
                 selectionEndPoint = location
@@ -741,6 +756,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         case .ended:
             if isMovingSelection {
                 lastSelectionPanLocation = nil
+                // Keep selection active and flip button visible
             } else {
                 selectionEndPoint = location
                 updateSelectionPreview()
@@ -760,15 +776,16 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     }
 
     @objc private func handleSelectionTap(_ gesture: UITapGestureRecognizer) {
-        if isMovingSelection {
-            let location = gesture.location(in: contentView)
+        let location = gesture.location(in: contentView)
+
+        if hasActiveSelection || isMovingSelection {
             if let rect = selectionRect, !rect.insetBy(dx: -30, dy: -30).contains(location) {
-                finalizeMove()
-            }
-        } else if hasActiveSelection {
-            let location = gesture.location(in: contentView)
-            if let rect = selectionRect, !rect.contains(location) {
-                clearSelection()
+                // Tapped outside selection - finalize and clear
+                if isMovingSelection {
+                    finalizeMove()
+                } else {
+                    clearSelection()
+                }
             }
         }
     }
@@ -900,15 +917,15 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         setDrawingWithUndo(newDrawing)
         delegate?.canvasDidChange()
 
-        // Enter move mode so user can reposition the copies
+        // Update selection to the new flipped copies, keep flip button visible
+        selectedStrokeIndices = newIndices
         movingStrokeIndices = newIndices
         isMovingSelection = true
-        selectedStrokeIndices = []
-        flipButton.isHidden = true
+        // Keep flip button visible so user can flip again
         updateMovingSelectionPreview()
     }
 
-    private func moveFlippedStrokes(dx: CGFloat, dy: CGFloat) {
+    private func moveSelectedStrokes(dx: CGFloat, dy: CGFloat) {
         let offset = CGVector(dx: dx, dy: dy)
         var newDrawing = pkCanvasView.drawing
 
@@ -942,6 +959,9 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         if let rect = selectionRect {
             selectionRect = rect.offsetBy(dx: dx, dy: dy)
         }
+
+        // Shift flip button too
+        flipButton.frame = flipButton.frame.offsetBy(dx: dx, dy: dy)
 
         pkCanvasView.drawing = newDrawing
         delegate?.canvasDidChange()
@@ -1399,12 +1419,19 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         }
         guard hasContent else { return nil }
 
+        // Force light mode trait collection for consistent rendering
+        let lightTraits = UITraitCollection(userInterfaceStyle: .light)
+
         let renderer = UIGraphicsImageRenderer(size: rect.size)
         return renderer.image { context in
             for i in range {
                 let layer = layers[i]
                 guard layer.isVisible else { continue }
-                let layerImage = layer.drawing.image(from: rect, scale: 1.0)
+                // Render with light mode trait collection to match canvas
+                var layerImage: UIImage!
+                lightTraits.performAsCurrent {
+                    layerImage = layer.drawing.image(from: rect, scale: 1.0)
+                }
                 context.cgContext.saveGState()
                 context.cgContext.setAlpha(layer.opacity)
                 layerImage.draw(in: rect)
@@ -1427,6 +1454,9 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     func renderCompositeImage(layers: [DrawingLayer], activeIndex: Int, scale: CGFloat = 1.0) -> UIImage? {
         let size = CGSize(width: canvasSize, height: canvasSize)
         let rect = CGRect(origin: .zero, size: size)
+        // Force light mode trait collection for consistent rendering
+        let lightTraits = UITraitCollection(userInterfaceStyle: .light)
+
         let renderer = UIGraphicsImageRenderer(size: CGSize(width: canvasSize * scale, height: canvasSize * scale))
         return renderer.image { context in
             context.cgContext.scaleBy(x: scale, y: scale)
@@ -1438,7 +1468,11 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
                 } else {
                     layerDrawing = layer.drawing
                 }
-                let layerImage = layerDrawing.image(from: rect, scale: 1.0)
+                // Render with light mode trait collection to match canvas
+                var layerImage: UIImage!
+                lightTraits.performAsCurrent {
+                    layerImage = layerDrawing.image(from: rect, scale: 1.0)
+                }
                 context.cgContext.saveGState()
                 context.cgContext.setAlpha(layer.opacity)
                 layerImage.draw(in: rect)
