@@ -340,10 +340,10 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         let strokePath = PKStrokePath(controlPoints: strokePoints, creationDate: Date())
         let stroke = PKStroke(ink: ink, path: strokePath)
 
-        var currentDrawing = pkCanvasView.drawing
+        var newDrawing = pkCanvasView.drawing
         // Insert at beginning so it's behind other strokes
-        currentDrawing.strokes.insert(stroke, at: 0)
-        pkCanvasView.drawing = currentDrawing
+        newDrawing.strokes.insert(stroke, at: 0)
+        setDrawingWithUndo(newDrawing)
 
         delegate?.canvasDidChange()
     }
@@ -554,14 +554,22 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         let strokePath = PKStrokePath(controlPoints: strokePoints, creationDate: Date())
         let stroke = PKStroke(ink: ink, path: strokePath)
 
-        var currentDrawing = pkCanvasView.drawing
-        currentDrawing.strokes.append(stroke)
-        pkCanvasView.drawing = currentDrawing
+        var newDrawing = pkCanvasView.drawing
+        newDrawing.strokes.append(stroke)
+        setDrawingWithUndo(newDrawing)
 
         delegate?.canvasDidChange()
     }
 
     // MARK: - Undo/Redo
+
+    private func setDrawingWithUndo(_ newDrawing: PKDrawing) {
+        let oldDrawing = pkCanvasView.drawing
+        pkCanvasView.undoManager?.registerUndo(withTarget: self) { target in
+            target.setDrawingWithUndo(oldDrawing)
+        }
+        pkCanvasView.drawing = newDrawing
+    }
 
     func performUndo() {
         pkCanvasView.undoManager?.undo()
