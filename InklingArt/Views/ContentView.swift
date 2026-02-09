@@ -22,6 +22,7 @@ struct ContentView: View {
     @State private var showLayerPanel: Bool = false
     @State private var shapeRecognitionEnabled: Bool = true
     @State private var layerUpdateTrigger: Int = 0
+    @State private var showGridOverlay: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -37,6 +38,7 @@ struct ContentView: View {
                 referenceOpacity: $referenceOpacity,
                 showLayerPanel: $showLayerPanel,
                 shapeRecognitionEnabled: $shapeRecognitionEnabled,
+                showGridOverlay: $showGridOverlay,
                 onResetLayers: {
                     layers = [DrawingLayer(name: "Layer 1")]
                     activeLayerIndex = 0
@@ -59,6 +61,7 @@ struct ContentView: View {
                         undoTrigger: $undoTrigger,
                         redoTrigger: $redoTrigger,
                         templateGrid: $templateGrid,
+                        showGridOverlay: $showGridOverlay,
                         onPickColor: { color in
                             currentColor = color
                             currentTool = .pencil
@@ -79,6 +82,7 @@ struct ContentView: View {
                         referenceImage: $referenceImage,
                         referenceOpacity: $referenceOpacity,
                         shapeRecognitionEnabled: shapeRecognitionEnabled,
+                        showGridOverlay: $showGridOverlay,
                         canvasStore: canvasStore,
                         animationStore: animationStore,
                         layers: layers,

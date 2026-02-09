@@ -14,6 +14,7 @@ struct TopBarView: View {
     @Binding var referenceOpacity: CGFloat
     @Binding var showLayerPanel: Bool
     @Binding var shapeRecognitionEnabled: Bool
+    @Binding var showGridOverlay: Bool
     var onResetLayers: (() -> Void)?
     @ObservedObject var canvasStore: CanvasStore
     @ObservedObject var animationStore: AnimationStore
@@ -153,6 +154,21 @@ struct TopBarView: View {
                     .background(Color(.systemGray5))
                     .cornerRadius(8)
                 }
+
+                // Grid overlay toggle
+                Button {
+                    showGridOverlay.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: showGridOverlay ? "grid.circle.fill" : "grid.circle")
+                        Text("Grid")
+                            .font(.subheadline)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(showGridOverlay ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
+                    .cornerRadius(8)
+                }
             } else {
                 // Template menu for smooth mode
                 Menu {
@@ -222,6 +238,21 @@ struct TopBarView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(showLayerPanel ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
+                    .cornerRadius(8)
+                }
+
+                // Grid overlay toggle
+                Button {
+                    showGridOverlay.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: showGridOverlay ? "grid.circle.fill" : "grid.circle")
+                        Text("Grid")
+                            .font(.subheadline)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(showGridOverlay ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
                     .cornerRadius(8)
                 }
 

@@ -12,6 +12,7 @@ struct SmoothCanvasView: UIViewRepresentable {
     @Binding var referenceImage: UIImage?
     @Binding var referenceOpacity: CGFloat
     var shapeRecognitionEnabled: Bool
+    @Binding var showGridOverlay: Bool
     var canvasStore: CanvasStore
     var animationStore: AnimationStore
     var layers: [DrawingLayer]
@@ -30,6 +31,7 @@ struct SmoothCanvasView: UIViewRepresentable {
         view.referenceImage = referenceImage
         view.referenceOpacity = referenceOpacity
         view.shapeRecognitionEnabled = shapeRecognitionEnabled
+        view.showGridOverlay = showGridOverlay
 
         if activeLayerIndex < layers.count {
             view.drawing = layers[activeLayerIndex].drawing
@@ -56,6 +58,7 @@ struct SmoothCanvasView: UIViewRepresentable {
         uiView.referenceImage = referenceImage
         uiView.referenceOpacity = referenceOpacity
         uiView.shapeRecognitionEnabled = shapeRecognitionEnabled
+        uiView.showGridOverlay = showGridOverlay
         print("✅ Set uiView.shapeRecognitionEnabled to \(uiView.shapeRecognitionEnabled)")
         context.coordinator.onPickColor = onPickColor
         context.coordinator.onCanvasChanged = onCanvasChanged

@@ -18,6 +18,9 @@ class PixelCanvasUIView: UIView {
     var currentShapeKind: ShapeKind = .line
     var shapeFilled: Bool = false
     var onionSkinGrid: PixelGrid?
+    var showGridOverlay: Bool = false {
+        didSet { setNeedsDisplay() }
+    }
 
     // Reference image (for tracing)
     var referenceImage: UIImage?
@@ -347,10 +350,13 @@ class PixelCanvasUIView: UIView {
             ctx.setLineDash(phase: 0, lengths: [])
         }
 
-        // Grid lines
-        let gridAlpha = min(1.0, max(0, (canvasScale - 0.5) / 1.5))
+        // Grid lines (auto-show when zoomed, or force-show with toggle)
+        var gridAlpha = min(1.0, max(0, (canvasScale - 0.5) / 1.5))
+        if showGridOverlay {
+            gridAlpha = max(gridAlpha, 0.8) // Force visible when toggle is on
+        }
         if gridAlpha > 0.01 {
-            ctx.setStrokeColor(UIColor(white: 0.3, alpha: gridAlpha * 0.4).cgColor)
+            ctx.setStrokeColor(UIColor(white: 0.2, alpha: gridAlpha * 0.6).cgColor)
             ctx.setLineWidth(0.5)
             for col in 0...grid.width {
                 let x = origin.x + CGFloat(col) * cs

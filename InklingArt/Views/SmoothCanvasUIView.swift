@@ -51,6 +51,12 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     private let belowLayersImageView = UIImageView()
     private let aboveLayersImageView = UIImageView()
 
+    // Grid overlay
+    var showGridOverlay: Bool = false {
+        didSet { updateGridOverlay() }
+    }
+    private let gridOverlayLayer = CAShapeLayer()
+
     // Shape recognition
     var shapeRecognitionEnabled: Bool = false
     private var recognizedShape: RecognizedShape?
@@ -258,6 +264,14 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         holdPreviewLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
         holdPreviewLayer.isHidden = true
         pkCanvasView.layer.addSublayer(holdPreviewLayer)
+
+        // Grid overlay layer
+        gridOverlayLayer.strokeColor = UIColor(white: 0.2, alpha: 0.5).cgColor
+        gridOverlayLayer.lineWidth = 1.0
+        gridOverlayLayer.fillColor = nil
+        gridOverlayLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
+        gridOverlayLayer.isHidden = true
+        contentView.layer.addSublayer(gridOverlayLayer)
 
         // Second finger tap for perfect shapes
         secondFingerTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleSecondFingerTap(_:)))
@@ -2116,6 +2130,35 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         scrollView.setZoomScale(1.0, animated: true)
     }
 
+    // MARK: - Grid Overlay
+
+    private func updateGridOverlay() {
+        gridOverlayLayer.isHidden = !showGridOverlay
+
+        guard showGridOverlay else { return }
+
+        let path = UIBezierPath()
+        let gridSpacing: CGFloat = 50 // Grid spacing in points
+
+        // Vertical lines
+        var x: CGFloat = 0
+        while x <= canvasSize {
+            path.move(to: CGPoint(x: x, y: 0))
+            path.addLine(to: CGPoint(x: x, y: canvasSize))
+            x += gridSpacing
+        }
+
+        // Horizontal lines
+        var y: CGFloat = 0
+        while y <= canvasSize {
+            path.move(to: CGPoint(x: 0, y: y))
+            path.addLine(to: CGPoint(x: canvasSize, y: y))
+            y += gridSpacing
+        }
+
+        gridOverlayLayer.path = path.cgPath
+    }
+
     // MARK: - Canvas Size
 
     func changeCanvasSize(_ newSize: CGFloat) {
@@ -2126,8 +2169,10 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         selectionPreviewLayer.frame = CGRect(x: 0, y: 0, width: newSize, height: newSize)
         resizeHandleLayer.frame = CGRect(x: 0, y: 0, width: newSize, height: newSize)
         holdPreviewLayer.frame = CGRect(x: 0, y: 0, width: newSize, height: newSize)
+        gridOverlayLayer.frame = CGRect(x: 0, y: 0, width: newSize, height: newSize)
         scrollView.contentSize = CGSize(width: newSize, height: newSize)
         checkerboardView.backgroundColor = buildCheckerPattern()
+        updateGridOverlay()
         layoutIfNeeded()
         centerContent()
     }

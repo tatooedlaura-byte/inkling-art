@@ -10,6 +10,7 @@ struct CanvasView: UIViewRepresentable {
     @Binding var undoTrigger: Int
     @Binding var redoTrigger: Int
     @Binding var templateGrid: PixelGrid?
+    @Binding var showGridOverlay: Bool
     var onPickColor: (UIColor) -> Void
     var canvasStore: CanvasStore
     var animationStore: AnimationStore
@@ -33,6 +34,7 @@ struct CanvasView: UIViewRepresentable {
         uiView.currentShapeKind = currentShapeKind
         uiView.shapeFilled = shapeFilled
         uiView.onionSkinGrid = animationStore.previousFrameGrid
+        uiView.showGridOverlay = showGridOverlay
 
         if context.coordinator.lastUndoTrigger != undoTrigger {
             context.coordinator.lastUndoTrigger = undoTrigger
