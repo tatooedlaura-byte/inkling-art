@@ -77,21 +77,20 @@ struct ShapeRecognizer {
         guard maxDev / directDistance < 0.05 else { return nil }
 
         // Snap to horizontal/vertical if close (within 8 degrees)
+        // IMPORTANT: Keep start point exactly where user touched, only snap end point
         var snappedStart = start
         var snappedEnd = end
         let angle = atan2(abs(dy), abs(dx))
         let snapThreshold: CGFloat = 8 * .pi / 180  // 8 degrees
 
         if angle < snapThreshold {
-            // Nearly horizontal — snap to same Y
-            let avgY = (start.y + end.y) / 2
-            snappedStart = CGPoint(x: start.x, y: avgY)
-            snappedEnd = CGPoint(x: end.x, y: avgY)
+            // Nearly horizontal — snap end.y to match start.y
+            snappedStart = start  // Keep original start point
+            snappedEnd = CGPoint(x: end.x, y: start.y)
         } else if angle > (.pi / 2 - snapThreshold) {
-            // Nearly vertical — snap to same X
-            let avgX = (start.x + end.x) / 2
-            snappedStart = CGPoint(x: avgX, y: start.y)
-            snappedEnd = CGPoint(x: avgX, y: end.y)
+            // Nearly vertical — snap end.x to match start.x
+            snappedStart = start  // Keep original start point
+            snappedEnd = CGPoint(x: start.x, y: end.y)
         }
 
         let minX = min(snappedStart.x, snappedEnd.x)
