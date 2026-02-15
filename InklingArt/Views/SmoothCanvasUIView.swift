@@ -159,6 +159,15 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         scrollView.showsVerticalScrollIndicator = false
         scrollView.translatesAutoresizingMaskIntoConstraints = false
 
+        // CRITICAL: Prevent scroll view gestures from delaying drawing touches
+        // This ensures the line starts exactly where the pencil touches down
+        if let panGesture = scrollView.panGestureRecognizer {
+            panGesture.delaysTouchesBegan = false
+        }
+        if let pinchGesture = scrollView.pinchGestureRecognizer {
+            pinchGesture.delaysTouchesBegan = false
+        }
+
         // Content view that will be zoomed
         scrollView.addSubview(contentView)
         contentView.translatesAutoresizingMaskIntoConstraints = false
@@ -217,27 +226,34 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         shapePanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleShapePan(_:)))
         shapePanGesture.isEnabled = false
         shapePanGesture.maximumNumberOfTouches = 1
+        shapePanGesture.delaysTouchesBegan = false
+        shapePanGesture.delaysTouchesEnded = false
         scrollView.addGestureRecognizer(shapePanGesture)
 
         // Shape confirm tap gesture
         shapeConfirmTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleShapeConfirmTap(_:)))
         shapeConfirmTapGesture.isEnabled = false
+        shapeConfirmTapGesture.delaysTouchesBegan = false
         scrollView.addGestureRecognizer(shapeConfirmTapGesture)
 
         // Eyedropper tap gesture
         eyedropperTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleEyedropperTap(_:)))
         eyedropperTapGesture.isEnabled = false
+        eyedropperTapGesture.delaysTouchesBegan = false
         scrollView.addGestureRecognizer(eyedropperTapGesture)
 
         // Selection pan gesture
         selectionPanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleSelectionPan(_:)))
         selectionPanGesture.isEnabled = false
         selectionPanGesture.maximumNumberOfTouches = 1
+        selectionPanGesture.delaysTouchesBegan = false
+        selectionPanGesture.delaysTouchesEnded = false
         scrollView.addGestureRecognizer(selectionPanGesture)
 
         // Selection tap gesture (tap outside to deselect)
         selectionTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleSelectionTap(_:)))
         selectionTapGesture.isEnabled = false
+        selectionTapGesture.delaysTouchesBegan = false
         scrollView.addGestureRecognizer(selectionTapGesture)
 
         // Resize handle layer (for shape recognition)
@@ -249,10 +265,13 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         recognizedShapePanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleRecognizedShapePan(_:)))
         recognizedShapePanGesture.isEnabled = false
         recognizedShapePanGesture.maximumNumberOfTouches = 1
+        recognizedShapePanGesture.delaysTouchesBegan = false
+        recognizedShapePanGesture.delaysTouchesEnded = false
         scrollView.addGestureRecognizer(recognizedShapePanGesture)
 
         recognizedShapeTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleRecognizedShapeTap(_:)))
         recognizedShapeTapGesture.isEnabled = false
+        recognizedShapeTapGesture.delaysTouchesBegan = false
         scrollView.addGestureRecognizer(recognizedShapeTapGesture)
 
         // Hold-to-snap preview layer (add to PKCanvas layer so it's visible on top)
@@ -277,6 +296,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         secondFingerTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleSecondFingerTap(_:)))
         secondFingerTapGesture.numberOfTouchesRequired = 2
         secondFingerTapGesture.isEnabled = false
+        secondFingerTapGesture.delaysTouchesBegan = false
         scrollView.addGestureRecognizer(secondFingerTapGesture)
 
         // Flip button
