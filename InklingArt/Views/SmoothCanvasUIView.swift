@@ -2011,6 +2011,19 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             print("🎨 Showing green preview...")
             showHoldShapePreview(shape)
 
+            // FORCE screen refresh on main thread with explicit animation block
+            DispatchQueue.main.async {
+                CATransaction.begin()
+                CATransaction.setDisableActions(false)
+                CATransaction.setAnimationDuration(0)
+                self.holdPreviewLayer.setNeedsDisplay()
+                self.contentView.setNeedsDisplay()
+                self.pkCanvasView.setNeedsDisplay()
+                CATransaction.commit()
+                CATransaction.flush()
+                print("🔄 Forced screen refresh on main thread")
+            }
+
             // Transition to SHAPE_SNAPPED state
             let currentCount = canvasView.drawing.strokes.count
             quickShapeState = .shapeSnapped(snapPointCount: currentCount)
