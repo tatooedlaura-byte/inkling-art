@@ -52,7 +52,7 @@ struct ContentView: View {
                 animationStore: animationStore
             )
 
-            ZStack(alignment: .topLeading) {
+            ZStack(alignment: .leading) {
                 // Canvas - switch based on mode
                 switch canvasMode {
                 case .pixel:
@@ -128,12 +128,8 @@ struct ContentView: View {
                 ToolbarView(selectedTool: $currentTool,
                            selectedShapeKind: $currentShapeKind,
                            shapeFilled: $shapeFilled,
-                           canvasMode: canvasMode,
-                           showGridOverlay: $showGridOverlay,
-                           mirrorModeEnabled: $mirrorModeEnabled,
-                           showLayerPanel: $showLayerPanel)
+                           canvasMode: canvasMode)
                     .padding(.leading, 12)
-                    .padding(.top, 12)
 
                 // Layer panel on the right (smooth mode only)
                 if canvasMode == .smooth && showLayerPanel {
