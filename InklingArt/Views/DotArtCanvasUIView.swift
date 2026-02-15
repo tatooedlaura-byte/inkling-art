@@ -160,9 +160,9 @@ class DotArtCanvasUIView: UIView {
             sizeSlider.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             sizeSlider.widthAnchor.constraint(equalToConstant: 200),
 
-            // Position preview below slider so it doesn't overlap
+            // Position preview at bottom left, below color picker
             sizePreviewView.centerXAnchor.constraint(equalTo: leadingAnchor, constant: 40),
-            sizePreviewView.topAnchor.constraint(equalTo: sizeSlider.bottomAnchor, constant: 30),
+            sizePreviewView.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -100),
             sizePreviewView.widthAnchor.constraint(equalToConstant: 80),
             sizePreviewView.heightAnchor.constraint(equalToConstant: 80),
         ])
