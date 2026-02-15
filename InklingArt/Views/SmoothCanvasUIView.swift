@@ -1529,10 +1529,18 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
     func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
         print("✏️ Pencil lifted - state: \(quickShapeState)")
 
-        // Commit clean shape if in snapped or adjusting state
+        // If shape was recognized while pencil was down, commit it NOW on lift
         if case .shapeSnapped = quickShapeState, let shape = currentHoldShape {
+            print("🎨 Pencil lifted - committing shape immediately")
             commitCleanShape(canvasView, shape)
-        } else if case .adjustingShape = quickShapeState, let shape = currentHoldShape {
+            resetQuickShape()
+            recognizedShapePendingCommit = false
+            isHoldingForSnap = false
+            return
+        }
+
+        // If in adjusting state, commit the adjusted shape
+        if case .adjustingShape = quickShapeState, let shape = currentHoldShape {
             commitCleanShape(canvasView, shape)
         }
 
@@ -1999,35 +2007,14 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             holdShapeInitialRect = shape.boundingRect
             currentHoldShape = shape
 
-            // IMPORTANT: Remove the wobbly stroke so we can see the green preview!
-            var newDrawing = canvasView.drawing
-            if newDrawing.strokes.count > 0 {
-                newDrawing.strokes.removeLast() // Remove wobbly stroke temporarily
-                pkCanvasView.drawing = newDrawing // Update without undo
-                print("🗑️ Temporarily removed wobbly stroke to show preview")
-            }
-
-            // Show green preview (now visible without wobbly stroke covering it!)
-            print("🎨 Showing green preview...")
-            showHoldShapePreview(shape)
-
-            // FORCE screen refresh on main thread with explicit animation block
-            DispatchQueue.main.async {
-                CATransaction.begin()
-                CATransaction.setDisableActions(false)
-                CATransaction.setAnimationDuration(0)
-                self.holdPreviewLayer.setNeedsDisplay()
-                self.contentView.setNeedsDisplay()
-                self.pkCanvasView.setNeedsDisplay()
-                CATransaction.commit()
-                CATransaction.flush()
-                print("🔄 Forced screen refresh on main thread")
-            }
+            // DON'T show preview yet - wait until pencil lifts
+            // (PKCanvasView doesn't update visuals while pencil is down)
+            print("✅ Shape recognized - will show preview on pencil lift")
 
             // Transition to SHAPE_SNAPPED state
             let currentCount = canvasView.drawing.strokes.count
             quickShapeState = .shapeSnapped(snapPointCount: currentCount)
-            print("🎯 Transitioned to SHAPE_SNAPPED state")
+            print("🎯 Transitioned to SHAPE_SNAPPED state (preview will show on lift)")
 
             // Mark that we have a shape ready to commit (for compatibility)
             recognizedShapePendingCommit = true
