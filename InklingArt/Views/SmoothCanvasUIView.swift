@@ -161,9 +161,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
 
         // CRITICAL: Prevent scroll view gestures from delaying drawing touches
         // This ensures the line starts exactly where the pencil touches down
-        if let panGesture = scrollView.panGestureRecognizer {
-            panGesture.delaysTouchesBegan = false
-        }
+        scrollView.panGestureRecognizer.delaysTouchesBegan = false
         if let pinchGesture = scrollView.pinchGestureRecognizer {
             pinchGesture.delaysTouchesBegan = false
         }
@@ -1637,7 +1635,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             isHoldingForSnap = true
 
             // Enable second finger tap for perfect shape snapping
-            if canShapeBeSnappedToPerfect(shape) {
+            if canBePerfected(shape) {
                 canSnapToPerfectShape = true
                 secondFingerTapGesture.isEnabled = true
                 print("✅ Second finger tap enabled for perfect shape snap")
