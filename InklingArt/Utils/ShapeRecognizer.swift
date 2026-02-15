@@ -124,32 +124,9 @@ struct ShapeRecognizer {
         let directDistance = hypot(end.x - start.x, end.y - start.y)
 
         // Must not be too closed (that's a circle) and not too straight (that's a line)
-        // Lower threshold (0.20) allows subtle arcs, higher (0.70) prevents straight lines
+        // Lowered threshold to 0.15 to allow very subtle arcs
         let closeness = directDistance / pathLength
-        guard closeness > 0.20, closeness < 0.70 else { return nil }
-
-        // CRITICAL: Reject anything with sharp corners (like rectangles/squares)
-        // Sample points and check for sudden direction changes
-        let sampleInterval = max(1, points.count / 20)
-        for i in stride(from: sampleInterval, to: points.count - sampleInterval, by: sampleInterval) {
-            let v1x = points[i].x - points[i - sampleInterval].x
-            let v1y = points[i].y - points[i - sampleInterval].y
-            let v2x = points[i + sampleInterval].x - points[i].x
-            let v2y = points[i + sampleInterval].y - points[i].y
-
-            let len1 = hypot(v1x, v1y)
-            let len2 = hypot(v2x, v2y)
-            guard len1 > 0.01, len2 > 0.01 else { continue }
-
-            let dot = v1x * v2x + v1y * v2y
-            let cosAngle = max(-1, min(1, dot / (len1 * len2)))
-            let angle = acos(cosAngle)
-
-            // If we find a sharp corner (> 45 degrees change), it's not an arc
-            if angle > CGFloat.pi / 4 {
-                return nil  // Has sharp corners, not an arc
-            }
-        }
+        guard closeness > 0.15, closeness < 0.70 else { return nil }
 
         // Fit a circle through the points using least-squares
         // Use three reference points: start, middle, end
