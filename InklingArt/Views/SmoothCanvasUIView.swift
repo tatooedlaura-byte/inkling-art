@@ -1548,9 +1548,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
         print("🔄 Committing clean shape...")
 
         var newDrawing = canvasView.drawing
-        if newDrawing.strokes.count > 0 {
-            newDrawing.strokes.removeLast() // Remove wobbly stroke
-        }
+        // Note: wobbly stroke was already removed when shape snapped!
 
         let cleanStroke = createStrokeFromShape(shape)
         newDrawing.strokes.append(cleanStroke)
@@ -2001,7 +1999,15 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             holdShapeInitialRect = shape.boundingRect
             currentHoldShape = shape
 
-            // Show green preview (don't replace yet - pencil still down!)
+            // IMPORTANT: Remove the wobbly stroke so we can see the green preview!
+            var newDrawing = canvasView.drawing
+            if newDrawing.strokes.count > 0 {
+                newDrawing.strokes.removeLast() // Remove wobbly stroke temporarily
+                pkCanvasView.drawing = newDrawing // Update without undo
+                print("🗑️ Temporarily removed wobbly stroke to show preview")
+            }
+
+            // Show green preview (now visible without wobbly stroke covering it!)
             print("🎨 Showing green preview...")
             showHoldShapePreview(shape)
 
