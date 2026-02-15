@@ -160,8 +160,9 @@ class DotArtCanvasUIView: UIView {
             sizeSlider.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 20),
             sizeSlider.widthAnchor.constraint(equalToConstant: 200),
 
-            sizePreviewView.centerXAnchor.constraint(equalTo: leadingAnchor, constant: 120),
-            sizePreviewView.centerYAnchor.constraint(equalTo: sizeSlider.centerYAnchor),
+            // Position preview below slider so it doesn't overlap
+            sizePreviewView.centerXAnchor.constraint(equalTo: leadingAnchor, constant: 40),
+            sizePreviewView.topAnchor.constraint(equalTo: sizeSlider.bottomAnchor, constant: 30),
             sizePreviewView.widthAnchor.constraint(equalToConstant: 80),
             sizePreviewView.heightAnchor.constraint(equalToConstant: 80),
         ])
@@ -185,7 +186,10 @@ class DotArtCanvasUIView: UIView {
             height: diameter
         )
         previewLayer.path = UIBezierPath(ovalIn: rect).cgPath
-        previewLayer.fillColor = currentColor.cgColor
+        // Always white fill with dark border so it's visible against any background
+        previewLayer.fillColor = UIColor.white.cgColor
+        previewLayer.strokeColor = UIColor.darkGray.cgColor
+        previewLayer.lineWidth = 2
         sizePreviewView.layer.addSublayer(previewLayer)
     }
 
