@@ -27,7 +27,9 @@ class DotArtCanvasUIView: UIView {
 
     // Grid snap
     var gridSnapEnabled: Bool = false
-    private let gridSize: CGFloat = 16
+    private var gridSize: CGFloat {
+        return dotSize * 2  // Grid spacing = dot diameter
+    }
 
     // Current state
     var currentColor: UIColor = .black
