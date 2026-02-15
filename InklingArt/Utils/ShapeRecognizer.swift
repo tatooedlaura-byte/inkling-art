@@ -29,33 +29,21 @@ struct ShapeRecognizer {
 
         print("🔍 ShapeRecognizer: Analyzing \(points.count) points...")
 
-        // Check line first (most specific, open shape)
+        // Only detect lines and arcs (simplified, more reliable)
+
+        // Check line first (most specific)
         if let line = detectLine(points: points) {
             print("✅ ShapeRecognizer: Detected LINE")
             return line
         }
 
-        // Check closed shapes before arcs (prevents boxes from being detected as arcs)
-        if let rect = detectRectangle(points: points) {
-            print("✅ ShapeRecognizer: Detected RECTANGLE")
-            return rect
-        }
-        if let circle = detectCircle(points: points) {
-            print("✅ ShapeRecognizer: Detected CIRCLE")
-            return circle
-        }
-        if let triangle = detectTriangle(points: points) {
-            print("✅ ShapeRecognizer: Detected TRIANGLE")
-            return triangle
-        }
-
-        // Check arc last (most permissive, open shape)
+        // Check arc
         if let arc = detectArc(points: points) {
-            print("✅ ShapeRecognizer: Detected ARC (⚠️ This should NOT happen for squares!)")
+            print("✅ ShapeRecognizer: Detected ARC")
             return arc
         }
 
-        print("❌ ShapeRecognizer: No shape detected")
+        print("❌ ShapeRecognizer: No shape detected (only lines and arcs supported)")
         return nil
     }
 
