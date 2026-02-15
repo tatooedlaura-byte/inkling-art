@@ -24,6 +24,7 @@ struct ContentView: View {
     @State private var layerUpdateTrigger: Int = 0
     @State private var showGridOverlay: Bool = false
     @State private var gridSnapEnabled: Bool = false
+    @State private var mirrorModeEnabled: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -41,6 +42,7 @@ struct ContentView: View {
                 shapeRecognitionEnabled: $shapeRecognitionEnabled,
                 showGridOverlay: $showGridOverlay,
                 gridSnapEnabled: $gridSnapEnabled,
+                mirrorModeEnabled: $mirrorModeEnabled,
                 onResetLayers: {
                     layers = [DrawingLayer(name: "Layer 1")]
                     activeLayerIndex = 0
@@ -87,6 +89,7 @@ struct ContentView: View {
                         referenceOpacity: $referenceOpacity,
                         shapeRecognitionEnabled: shapeRecognitionEnabled,
                         showGridOverlay: $showGridOverlay,
+                        mirrorModeEnabled: $mirrorModeEnabled,
                         canvasStore: canvasStore,
                         animationStore: animationStore,
                         layers: layers,

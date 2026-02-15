@@ -6,7 +6,7 @@ protocol SmoothCanvasDelegate: AnyObject {
     func didPickColor(_ color: UIColor)
 }
 
-class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
+class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UIGestureRecognizerDelegate {
     weak var delegate: SmoothCanvasDelegate?
 
     private let scrollView = UIScrollView()
@@ -29,6 +29,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     private var isMovingShape = false
     private var lastPanLocation: CGPoint?
     private var eyedropperTapGesture: UITapGestureRecognizer!
+    private var fillTapGesture: UITapGestureRecognizer!
 
     // Selection tool state
     private var selectionPanGesture: UIPanGestureRecognizer!
@@ -88,6 +89,46 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     private var resizingShapeStrokeIndex: Int?
     private var lastDragStrokeCount = 0
 
+    // QuickShape state machine for Procreate-style behavior
+    private enum QuickShapeState: CustomStringConvertible {
+        case idle
+        case drawingStroke
+        case shapeSnapped(snapPointCount: Int)  // Pen still down, shape recognized
+        case adjustingShape                      // Dragging to resize/move
+
+        var description: String {
+            switch self {
+            case .idle: return "IDLE"
+            case .drawingStroke: return "DRAWING"
+            case .shapeSnapped(let count): return "SNAPPED(\(count))"
+            case .adjustingShape: return "ADJUSTING"
+            }
+        }
+    }
+
+    private var quickShapeState: QuickShapeState = .idle
+    private var snapPointCount: Int = 0
+    private var dragStartPoint: CGPoint?
+    private var shapeBeforeAdjustment: RecognizedShape?
+
+    // Canvas rotation state
+    private var rotationGesture: UIRotationGestureRecognizer!
+    private var currentRotation: CGFloat = 0.0
+    private let rotationIndicatorLayer = CATextLayer()
+
+    // Mirror drawing mode state
+    var mirrorModeEnabled: Bool = false {
+        didSet {
+            mirrorLineLayer.isHidden = !mirrorModeEnabled
+            if mirrorModeEnabled {
+                showMirrorLine()
+            }
+        }
+    }
+    private let mirrorLineLayer = CAShapeLayer()
+    private var lastStrokeCountBeforeMirror = 0
+    private var isMirroringInProgress = false
+
     var drawing: PKDrawing {
         get { pkCanvasView.drawing }
         set {
@@ -122,6 +163,12 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             }
             if recognizedShapePendingCommit {
                 commitRecognizedShape()
+            }
+            // Reset rotation when switching to non-drawing tools
+            if currentTool != .pencil && currentTool != .eraser && currentRotation != 0 {
+                currentRotation = 0
+                applyRotation(0)
+                rotationIndicatorLayer.isHidden = true
             }
             updateTool()
             shapePreviewLayer.path = nil
@@ -240,6 +287,12 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         eyedropperTapGesture.delaysTouchesBegan = false
         scrollView.addGestureRecognizer(eyedropperTapGesture)
 
+        // Fill tap gesture
+        fillTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleFillTap(_:)))
+        fillTapGesture.isEnabled = false
+        fillTapGesture.delaysTouchesBegan = false
+        scrollView.addGestureRecognizer(fillTapGesture)
+
         // Selection pan gesture
         selectionPanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleSelectionPan(_:)))
         selectionPanGesture.isEnabled = false
@@ -289,6 +342,14 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         gridOverlayLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
         gridOverlayLayer.isHidden = true
         contentView.layer.addSublayer(gridOverlayLayer)
+
+        // Mirror line layer
+        mirrorLineLayer.strokeColor = UIColor.systemBlue.withAlphaComponent(0.4).cgColor
+        mirrorLineLayer.lineWidth = 2
+        mirrorLineLayer.lineDashPattern = [8, 4]
+        mirrorLineLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
+        mirrorLineLayer.isHidden = true
+        contentView.layer.addSublayer(mirrorLineLayer)
 
         // Second finger tap for perfect shapes
         secondFingerTapGesture = UITapGestureRecognizer(target: self, action: #selector(handleSecondFingerTap(_:)))
@@ -360,6 +421,22 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         swipeRight.numberOfTouchesRequired = 3
         addGestureRecognizer(swipeRight)
 
+        // Canvas rotation gesture
+        rotationGesture = UIRotationGestureRecognizer(target: self, action: #selector(handleRotation(_:)))
+        rotationGesture.delegate = self
+        scrollView.addGestureRecognizer(rotationGesture)
+
+        // Rotation indicator
+        rotationIndicatorLayer.fontSize = 14
+        rotationIndicatorLayer.foregroundColor = UIColor.white.cgColor
+        rotationIndicatorLayer.backgroundColor = UIColor.black.withAlphaComponent(0.7).cgColor
+        rotationIndicatorLayer.cornerRadius = 6
+        rotationIndicatorLayer.alignmentMode = .center
+        rotationIndicatorLayer.frame = CGRect(x: 20, y: 20, width: 80, height: 30)
+        rotationIndicatorLayer.contentsScale = UIScreen.main.scale
+        rotationIndicatorLayer.isHidden = true
+        layer.addSublayer(rotationIndicatorLayer)
+
         updateTool()
     }
 
@@ -385,6 +462,106 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
 
     func scrollViewDidZoom(_ scrollView: UIScrollView) {
         centerContent()
+        // Update rotation transform after zoom
+        if currentRotation != 0 {
+            applyRotation(currentRotation)
+        }
+    }
+
+    // MARK: - UIGestureRecognizerDelegate
+
+    func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
+                          shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // Allow rotation + zoom together
+        if (gestureRecognizer == rotationGesture && otherGestureRecognizer == scrollView.pinchGestureRecognizer) ||
+           (gestureRecognizer == scrollView.pinchGestureRecognizer && otherGestureRecognizer == rotationGesture) {
+            return true
+        }
+        return false
+    }
+
+    // MARK: - Canvas Rotation
+
+    @objc private func handleRotation(_ gesture: UIRotationGestureRecognizer) {
+        guard currentTool == .pencil || currentTool == .eraser else { return }
+
+        if gesture.state == .began || gesture.state == .changed {
+            let rotation = currentRotation + gesture.rotation
+            applyRotation(rotation)
+            updateRotationIndicator(rotation)
+        } else if gesture.state == .ended {
+            currentRotation += gesture.rotation
+            gesture.rotation = 0
+        }
+    }
+
+    private func applyRotation(_ angle: CGFloat) {
+        let rotationTransform = CGAffineTransform(rotationAngle: angle)
+        let scaleTransform = CGAffineTransform(scaleX: scrollView.zoomScale, y: scrollView.zoomScale)
+        contentView.transform = rotationTransform.concatenating(scaleTransform)
+    }
+
+    private func updateRotationIndicator(_ angle: CGFloat) {
+        var degrees = Int(round(angle * 180 / .pi)) % 360
+        if degrees < 0 { degrees += 360 }
+        rotationIndicatorLayer.string = "\(degrees)°"
+        rotationIndicatorLayer.isHidden = false
+        NSObject.cancelPreviousPerformRequests(withTarget: self, selector: #selector(hideRotationIndicator), object: nil)
+        perform(#selector(hideRotationIndicator), with: nil, afterDelay: 1.0)
+    }
+
+    @objc private func hideRotationIndicator() {
+        rotationIndicatorLayer.isHidden = true
+    }
+
+    // MARK: - Mirror Drawing Mode
+
+    private func showMirrorLine() {
+        let centerX = canvasSize / 2
+        let path = UIBezierPath()
+        path.move(to: CGPoint(x: centerX, y: 0))
+        path.addLine(to: CGPoint(x: centerX, y: canvasSize))
+        mirrorLineLayer.path = path.cgPath
+    }
+
+    private func mirrorNewStrokes(canvasView: PKCanvasView, from startIndex: Int, to endIndex: Int) {
+        guard startIndex < endIndex else { return }
+
+        isMirroringInProgress = true
+        defer { isMirroringInProgress = false }
+
+        var newDrawing = canvasView.drawing
+        let centerX = canvasSize / 2
+
+        for i in startIndex..<endIndex {
+            let originalStroke = newDrawing.strokes[i]
+            let mirroredStroke = mirrorStroke(originalStroke, centerX: centerX)
+            newDrawing.strokes.append(mirroredStroke)
+        }
+
+        setDrawingWithUndo(newDrawing)
+    }
+
+    private func mirrorStroke(_ stroke: PKStroke, centerX: CGFloat) -> PKStroke {
+        var mirroredPoints: [PKStrokePoint] = []
+
+        for point in stroke.path {
+            let mirroredX = centerX - (point.location.x - centerX)
+            let mirroredPoint = PKStrokePoint(
+                location: CGPoint(x: mirroredX, y: point.location.y),
+                timeOffset: point.timeOffset,
+                size: point.size,
+                opacity: point.opacity,
+                force: point.force,
+                azimuth: -point.azimuth,
+                altitude: point.altitude
+            )
+            mirroredPoints.append(mirroredPoint)
+        }
+
+        let mirroredPath = PKStrokePath(controlPoints: mirroredPoints,
+                                       creationDate: stroke.path.creationDate)
+        return PKStroke(ink: stroke.ink, path: mirroredPath)
     }
 
     private func buildCheckerPattern() -> UIColor {
@@ -421,6 +598,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             shapePanGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
             selectionPanGesture.isEnabled = false
             selectionTapGesture.isEnabled = false
 
@@ -432,17 +610,18 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             shapePanGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
             selectionPanGesture.isEnabled = false
             selectionTapGesture.isEnabled = false
 
         case .fill:
-            // Fill not supported in smooth mode (only pixel mode)
             pkCanvasView.isUserInteractionEnabled = false
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = true
             selectionPanGesture.isEnabled = false
             selectionTapGesture.isEnabled = false
 
@@ -453,6 +632,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             shapePanGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = true
+            fillTapGesture.isEnabled = false
             selectionPanGesture.isEnabled = false
             selectionTapGesture.isEnabled = false
 
@@ -463,6 +643,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             shapePanGesture.isEnabled = true
             shapeConfirmTapGesture.isEnabled = true
             eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
             selectionPanGesture.isEnabled = false
             selectionTapGesture.isEnabled = false
 
@@ -473,6 +654,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             shapePanGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
+            fillTapGesture.isEnabled = false
             selectionPanGesture.isEnabled = true
             selectionTapGesture.isEnabled = true
         }
@@ -497,6 +679,71 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
         if let color = image.pixelColor(at: location) {
             delegate?.didPickColor(color)
         }
+    }
+
+    // MARK: - Fill Tool
+
+    @objc private func handleFillTap(_ gesture: UITapGestureRecognizer) {
+        guard gesture.state == .ended else { return }
+
+        let tapLocation = gesture.location(in: contentView)
+        performFloodFill(at: tapLocation, color: currentColor)
+    }
+
+    private func performFloodFill(at point: CGPoint, color: UIColor) {
+        print("🪣 Fill at \(point) with color \(color)")
+
+        // Simple full-area fill (Option B from plan)
+        // Create horizontal lines covering the canvas
+        var fillPoints: [PKStrokePoint] = []
+        let fillWidth: CGFloat = 10
+
+        for y in stride(from: CGFloat(0), to: canvasSize, by: 5) {
+            let startPoint = PKStrokePoint(
+                location: CGPoint(x: 0, y: y),
+                timeOffset: 0,
+                size: CGSize(width: fillWidth, height: fillWidth),
+                opacity: 1.0,
+                force: 1.0,
+                azimuth: 0,
+                altitude: .pi / 2
+            )
+            let endPoint = PKStrokePoint(
+                location: CGPoint(x: canvasSize, y: y),
+                timeOffset: 0.01,
+                size: CGSize(width: fillWidth, height: fillWidth),
+                opacity: 1.0,
+                force: 1.0,
+                azimuth: 0,
+                altitude: .pi / 2
+            )
+            fillPoints.append(startPoint)
+            fillPoints.append(endPoint)
+        }
+
+        let path = PKStrokePath(controlPoints: fillPoints, creationDate: Date())
+        let ink: PKInk
+        if #available(iOS 17.0, *) {
+            ink = PKInkingTool(.monoline, color: color, width: fillWidth * 2).ink
+        } else {
+            ink = PKInkingTool(.marker, color: color, width: fillWidth * 2).ink
+        }
+        let fillStroke = PKStroke(ink: ink, path: path)
+
+        var newDrawing = pkCanvasView.drawing
+        // Add fill behind existing strokes
+        newDrawing.strokes.insert(fillStroke, at: 0)
+
+        // Mirror if enabled
+        if mirrorModeEnabled {
+            let centerX = canvasSize / 2
+            let mirroredFill = mirrorStroke(fillStroke, centerX: centerX)
+            newDrawing.strokes.insert(mirroredFill, at: 1)
+            print("🪞 Added mirrored fill")
+        }
+
+        setDrawingWithUndo(newDrawing)
+        print("✅ Fill completed!")
     }
 
     // MARK: - Shape Tool
@@ -1107,96 +1354,224 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
     func canvasViewDrawingDidChange(_ canvasView: PKCanvasView) {
         let currentCount = canvasView.drawing.strokes.count
 
-        print("📝 Drawing changed: strokes=\(currentCount) snap=\(shapeRecognitionEnabled) tool=\(currentTool.rawValue)")
+        print("📝 Drawing changed: strokes=\(currentCount) state=\(quickShapeState) tool=\(currentTool.rawValue)")
 
-        // Hold-to-snap detection (works regardless of snap toggle)
-        if currentTool == .pencil && !recognizedShapePendingCommit && !isHoldingForSnap {
-            print("✅ Conditions passed for hold detection")
-            if currentCount > holdStartStrokeCount {
-                // New stroke started
-                print("🆕 New stroke started! count=\(currentCount) prev=\(holdStartStrokeCount)")
-                holdStartStrokeCount = currentCount
-                lastStrokePointCount = 0
-                holdDetectionStartTime = Date()
-                startHoldGestureTimer(canvasView)
-            } else if currentCount == holdStartStrokeCount && currentCount > 0 {
-                // Same stroke continuing - check if points are still being added
-                let lastStroke = canvasView.drawing.strokes[currentCount - 1]
-                let currentPointCount = lastStroke.path.count
-
-                print("📊 Stroke continuing: points=\(currentPointCount) last=\(lastStrokePointCount)")
-
-                // Only reset timer if stroke is actually growing significantly
-                // Check if stroke length has increased by more than 10pt (not just point count)
-                // This prevents natural hand tremor from constantly resetting the timer
-                if currentPointCount > lastStrokePointCount + 15 {
-                    // Check if the stroke has actually grown in length
-                    var strokeLengthGrowth: CGFloat = 0
-                    if currentPointCount > 15 && lastStrokePointCount > 0 {
-                        // Calculate length added since last check
-                        let startIdx = max(0, lastStrokePointCount - 1)
-                        for i in startIdx..<(currentPointCount - 1) {
-                            let p1 = lastStroke.path[i].location
-                            let p2 = lastStroke.path[i + 1].location
-                            strokeLengthGrowth += hypot(p2.x - p1.x, p2.y - p1.y)
-                        }
-                    }
-
-                    // Only reset if significant movement (>10pt of actual drawing)
-                    if strokeLengthGrowth > 10 {
-                        print("📈 Stroke growing significantly (length: \(strokeLengthGrowth)pt) - resetting timer")
-                        lastStrokePointCount = currentPointCount
-                        startHoldGestureTimer(canvasView)
-                    } else {
-                        print("🤏 Minor movement (length: \(strokeLengthGrowth)pt) - ignoring, letting timer fire")
-                    }
-                } else {
-                    // Point count hasn't grown much, let timer fire (user is holding still)
-                    print("⏸️ Holding still (\(currentPointCount - lastStrokePointCount) new points) - letting timer fire")
-                }
-            }
-        } else {
-            print("❌ Hold detection blocked: snap=\(shapeRecognitionEnabled) tool=\(currentTool.rawValue) pending=\(recognizedShapePendingCommit) holding=\(isHoldingForSnap)")
+        guard currentTool == .pencil else {
+            resetQuickShape()
+            delegate?.canvasDidChange()
+            return
         }
+
+        // QuickShape state machine
+        switch quickShapeState {
+        case .idle:
+            handleIdleState(canvasView, currentCount)
+        case .drawingStroke:
+            handleDrawingState(canvasView, currentCount)
+        case .shapeSnapped(let snapCount):
+            handleShapeSnappedState(canvasView, currentCount, snapCount)
+        case .adjustingShape:
+            handleAdjustingState(canvasView, currentCount)
+        }
+
+        // Mirror mode: create mirrored strokes
+        if mirrorModeEnabled && !isMirroringInProgress && (currentTool == .pencil || currentTool == .eraser) {
+            let currentStrokeCount = canvasView.drawing.strokes.count
+
+            if currentStrokeCount > lastStrokeCountBeforeMirror {
+                mirrorNewStrokes(canvasView: canvasView,
+                               from: lastStrokeCountBeforeMirror,
+                               to: currentStrokeCount)
+            }
+
+            lastStrokeCountBeforeMirror = canvasView.drawing.strokes.count
+        }
+
         delegate?.canvasDidChange()
     }
 
-    func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
-        print("✏️ Pencil lifted")
+    // MARK: - QuickShape State Handlers
 
-        // If we have a recognized shape, replace the wobbly stroke NOW
-        if let shape = currentHoldShape, recognizedShapePendingCommit {
-            print("🔄 Replacing wobbly stroke with clean shape on lift...")
+    private func handleIdleState(_ canvasView: PKCanvasView, _ currentCount: Int) {
+        if currentCount > holdStartStrokeCount {
+            // New stroke started
+            print("🆕 New stroke started! Transitioning to DRAWING_STROKE")
+            quickShapeState = .drawingStroke
+            holdStartStrokeCount = currentCount
+            lastStrokePointCount = 0
+            holdDetectionStartTime = Date()
+            startHoldGestureTimer(canvasView)
+        }
+    }
 
-            var newDrawing = canvasView.drawing
-            if newDrawing.strokes.count > 0 {
-                newDrawing.strokes.removeLast() // Remove wobbly stroke
+    private func handleDrawingState(_ canvasView: PKCanvasView, _ currentCount: Int) {
+        guard currentCount == holdStartStrokeCount && currentCount > 0 else { return }
+
+        let lastStroke = canvasView.drawing.strokes[currentCount - 1]
+        let currentPointCount = lastStroke.path.count
+
+        print("📊 Drawing stroke: points=\(currentPointCount) last=\(lastStrokePointCount)")
+
+        // Check if stroke is growing significantly
+        if currentPointCount > lastStrokePointCount + 15 {
+            var strokeLengthGrowth: CGFloat = 0
+            if currentPointCount > 15 && lastStrokePointCount > 0 {
+                let startIdx = max(0, lastStrokePointCount - 1)
+                for i in startIdx..<(currentPointCount - 1) {
+                    let p1 = lastStroke.path[i].location
+                    let p2 = lastStroke.path[i + 1].location
+                    strokeLengthGrowth += hypot(p2.x - p1.x, p2.y - p1.y)
+                }
             }
 
-            let cleanStroke = createStrokeFromShape(shape)
-            newDrawing.strokes.append(cleanStroke)
+            // Reset timer if significant movement
+            if strokeLengthGrowth > 10 {
+                print("📈 Stroke growing - resetting timer")
+                lastStrokePointCount = currentPointCount
+                startHoldGestureTimer(canvasView)
+            }
+        }
+    }
 
-            setDrawingWithUndo(newDrawing)
+    private func handleShapeSnappedState(_ canvasView: PKCanvasView, _ currentCount: Int, _ snapCount: Int) {
+        // If user continues drawing after shape snap, enter adjusting mode
+        if currentCount > snapCount {
+            print("🎯 User dragging after snap - entering ADJUSTING mode")
+            quickShapeState = .adjustingShape
+            snapPointCount = currentCount
 
-            // Hide preview
-            holdPreviewLayer.isHidden = true
+            // Save shape before adjustment for reference
+            shapeBeforeAdjustment = currentHoldShape
 
-            // Success haptic
-            let generator = UINotificationFeedbackGenerator()
-            generator.notificationOccurred(.success)
+            // Get drag start point (first point of new stroke)
+            if let newStroke = canvasView.drawing.strokes.last {
+                dragStartPoint = newStroke.path.first?.location
+            }
+        }
+    }
 
-            print("✅ Clean shape committed!")
+    private func handleAdjustingState(_ canvasView: PKCanvasView, _ currentCount: Int) {
+        // Handle drag-to-adjust
+        guard let shape = currentHoldShape,
+              let dragStart = dragStartPoint,
+              currentCount > snapPointCount,
+              let dragStroke = canvasView.drawing.strokes.last else { return }
 
-            // Clean up
-            currentHoldShape = nil
-            recognizedShapePendingCommit = false
+        guard let currentPoint = dragStroke.path.last?.location else { return }
+
+        print("📏 Adjusting shape: drag from \(\(dragStart)) to \(currentPoint)")
+
+        // Calculate adjustment
+        let dx = currentPoint.x - dragStart.x
+        let dy = currentPoint.y - dragStart.y
+        let adjustedShape = adjustShapeByDrag(shape, dx: dx, dy: dy)
+
+        // Update preview
+        currentHoldShape = adjustedShape
+        showHoldShapePreview(adjustedShape)
+
+        // Remove drag tracking stroke
+        var newDrawing = canvasView.drawing
+        if newDrawing.strokes.count > snapPointCount {
+            newDrawing.strokes.removeLast()
+        }
+        pkCanvasView.drawing = newDrawing
+    }
+
+    private func adjustShapeByDrag(_ shape: RecognizedShape, dx: CGFloat, dy: CGFloat) -> RecognizedShape {
+        var adjusted = shape
+        let dragDistance = hypot(dx, dy)
+
+        // Small drag = move, large drag = resize
+        if dragDistance < 30 {
+            // Move shape
+            adjusted.boundingRect = shape.boundingRect.offsetBy(dx: dx, dy: dy)
+            if let start = shape.lineStart, let end = shape.lineEnd {
+                adjusted.lineStart = CGPoint(x: start.x + dx, y: start.y + dy)
+                adjusted.lineEnd = CGPoint(x: end.x + dx, y: end.y + dy)
+            }
+        } else {
+            // Resize shape
+            let originalSize = max(shape.boundingRect.width, shape.boundingRect.height)
+            let scaleFactor = max(0.5, min(3.0, 1.0 + dragDistance / max(1, originalSize)))
+            let center = shape.boundingRect.center
+
+            let newWidth = shape.boundingRect.width * scaleFactor
+            let newHeight = shape.boundingRect.height * scaleFactor
+            adjusted.boundingRect = CGRect(
+                x: center.x - newWidth / 2,
+                y: center.y - newHeight / 2,
+                width: newWidth,
+                height: newHeight
+            )
+
+            // Update line endpoints proportionally
+            if shape.kind == .line, let start = shape.lineStart, let end = shape.lineEnd {
+                let lineCenter = CGPoint(x: (start.x + end.x) / 2, y: (start.y + end.y) / 2)
+                let dx = end.x - start.x
+                let dy = end.y - start.y
+                adjusted.lineStart = CGPoint(x: lineCenter.x - dx * scaleFactor / 2, y: lineCenter.y - dy * scaleFactor / 2)
+                adjusted.lineEnd = CGPoint(x: lineCenter.x + dx * scaleFactor / 2, y: lineCenter.y + dy * scaleFactor / 2)
+            }
         }
 
-        // Reset hold state
-        isHoldingForSnap = false
+        return adjusted
+    }
 
-        // Cancel hold timer when user lifts pencil
+    private func resetQuickShape() {
+        quickShapeState = .idle
+        snapPointCount = 0
+        dragStartPoint = nil
+        shapeBeforeAdjustment = nil
         cancelHoldGestureTimer()
+    }
+
+    func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
+        print("✏️ Pencil lifted - state: \(quickShapeState)")
+
+        // Commit clean shape if in snapped or adjusting state
+        if case .shapeSnapped = quickShapeState, let shape = currentHoldShape {
+            commitCleanShape(canvasView, shape)
+        } else if case .adjustingShape = quickShapeState, let shape = currentHoldShape {
+            commitCleanShape(canvasView, shape)
+        }
+
+        // Reset to idle state
+        resetQuickShape()
+
+        // Also reset old hold state for compatibility
+        recognizedShapePendingCommit = false
+        isHoldingForSnap = false
+    }
+
+    private func commitCleanShape(_ canvasView: PKCanvasView, _ shape: RecognizedShape) {
+        print("🔄 Committing clean shape...")
+
+        var newDrawing = canvasView.drawing
+        if newDrawing.strokes.count > 0 {
+            newDrawing.strokes.removeLast() // Remove wobbly stroke
+        }
+
+        let cleanStroke = createStrokeFromShape(shape)
+        newDrawing.strokes.append(cleanStroke)
+
+        // Mirror if enabled
+        if mirrorModeEnabled {
+            let centerX = canvasSize / 2
+            let mirroredStroke = mirrorStroke(cleanStroke, centerX: centerX)
+            newDrawing.strokes.append(mirroredStroke)
+            print("🪞 Added mirrored shape")
+        }
+
+        setDrawingWithUndo(newDrawing)
+
+        // Hide preview
+        holdPreviewLayer.isHidden = true
+
+        // Success haptic
+        UINotificationFeedbackGenerator().notificationOccurred(.success)
+
+        print("✅ Clean shape committed!")
     }
 
     // MARK: - Shape Recognition
@@ -1630,7 +2005,12 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             print("🎨 Showing green preview...")
             showHoldShapePreview(shape)
 
-            // Mark that we have a shape ready to commit
+            // Transition to SHAPE_SNAPPED state
+            let currentCount = canvasView.drawing.strokes.count
+            quickShapeState = .shapeSnapped(snapPointCount: currentCount)
+            print("🎯 Transitioned to SHAPE_SNAPPED state")
+
+            // Mark that we have a shape ready to commit (for compatibility)
             recognizedShapePendingCommit = true
             isHoldingForSnap = true
 
@@ -1644,10 +2024,9 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             print("✅ Preview shown! Continue dragging or lift to commit")
 
             // Provide haptic feedback
-            let generator = UIImpactFeedbackGenerator(style: .medium)
-            generator.impactOccurred()
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
 
-            print("🎯 Entered resize mode - drag to resize, lift to commit, second finger to perfect")
+            print("🎯 QuickShape ready - drag to adjust, lift to commit, second finger to perfect")
         } else {
             print("❌ No shape recognized from \(points.count) points")
         }

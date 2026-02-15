@@ -16,6 +16,7 @@ struct TopBarView: View {
     @Binding var shapeRecognitionEnabled: Bool
     @Binding var showGridOverlay: Bool
     @Binding var gridSnapEnabled: Bool
+    @Binding var mirrorModeEnabled: Bool
     var onResetLayers: (() -> Void)?
     @ObservedObject var canvasStore: CanvasStore
     @ObservedObject var animationStore: AnimationStore
@@ -257,6 +258,21 @@ struct TopBarView: View {
                     .padding(.horizontal, 10)
                     .padding(.vertical, 6)
                     .background(showGridOverlay ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
+                    .cornerRadius(8)
+                }
+
+                // Mirror mode toggle
+                Button {
+                    mirrorModeEnabled.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: mirrorModeEnabled ? "arrow.left.and.right.circle.fill" : "arrow.left.and.right.circle")
+                        Text("Mirror")
+                            .font(.subheadline)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(mirrorModeEnabled ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
                     .cornerRadius(8)
                 }
 
