@@ -144,7 +144,7 @@ class DotArtCanvasUIView: UIView {
         // Vertical slider on left edge
         sizeSlider.transform = CGAffineTransform(rotationAngle: -.pi / 2)
         sizeSlider.minimumValue = 2
-        sizeSlider.maximumValue = 60
+        sizeSlider.maximumValue = 30  // Max radius for 60px diameter preview
         sizeSlider.value = Float(dotSize)
         sizeSlider.addTarget(self, action: #selector(sizeSliderChanged), for: .valueChanged)
         sizeSlider.translatesAutoresizingMaskIntoConstraints = false
