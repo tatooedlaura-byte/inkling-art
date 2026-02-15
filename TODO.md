@@ -53,3 +53,55 @@ Stack-based array snapshots (dots are lightweight).
 - ToolbarView — `ForEach(Tool.allCases)` picks up tools automatically
 - TopBarView — `ForEach(CanvasMode.allCases)` picks up new mode automatically
 - ColorPaletteView — shared across all modes
+
+---
+
+# Tangram Mode (Future Feature)
+
+A new creative mode where users can drag preset geometric shapes onto the canvas and arrange them to create images, patterns, and designs.
+
+## Core Concept
+
+- Drag predefined shapes (triangles, squares, parallelograms, etc.) from a shape library onto the canvas
+- Move, rotate, and possibly scale shapes to arrange compositions
+- Color each shape individually
+- Build traditional tangram puzzles, or create freeform art compositions
+
+## Key Features
+
+- **Shape Library**: Preset geometric shapes available to drag onto canvas
+  - Traditional tangram pieces (2 large triangles, 1 medium triangle, 2 small triangles, 1 square, 1 parallelogram)
+  - Additional geometric shapes (circles, hexagons, other polygons?)
+
+- **Shape Manipulation**:
+  - Drag to move
+  - Rotate (two-finger rotation or rotation handle?)
+  - Scale/resize (optional)
+  - Layer ordering (bring to front/send to back)
+
+- **Coloring**:
+  - Select a shape and apply color from palette
+  - Each shape maintains its own fill color
+  - Optional: stroke color and width
+
+- **Canvas Interaction**:
+  - Tap to select shape
+  - Drag to move
+  - Tap empty space to deselect
+  - Delete selected shape (trash button or gesture)
+
+## Implementation Considerations
+
+- New canvas mode or separate tool?
+- Shape data model (position, rotation, scale, color, type)
+- Hit testing for shape selection
+- Rendering order (z-index/layers)
+- Undo/redo for shape operations
+- Save/export compositions
+
+## Files to Create/Modify
+
+- New shape data models
+- Tangram canvas view
+- Shape library UI component
+- Update CanvasMode enum if new mode
