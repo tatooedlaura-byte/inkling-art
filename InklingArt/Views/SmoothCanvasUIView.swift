@@ -1529,19 +1529,54 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
     func canvasViewDidEndUsingTool(_ canvasView: PKCanvasView) {
         print("✏️ Pencil lifted - state: \(quickShapeState)")
 
-        // If shape was recognized while pencil was down, commit it NOW on lift
+        // If shape was recognized while pencil was down, show green preview on lift
         if case .shapeSnapped = quickShapeState, let shape = currentHoldShape {
-            print("🎨 Pencil lifted - committing shape immediately")
-            commitCleanShape(canvasView, shape)
-            resetQuickShape()
-            recognizedShapePendingCommit = false
-            isHoldingForSnap = false
+            print("🎨 Pencil lifted - showing green preview")
+
+            // Save drawing before removing wobbly stroke (for undo)
+            drawingBeforeRecognition = canvasView.drawing
+
+            // Remove the wobbly stroke
+            var newDrawing = canvasView.drawing
+            if newDrawing.strokes.count > 0 {
+                newDrawing.strokes.removeLast()
+                print("🗑️ Removed wobbly stroke")
+            }
+            pkCanvasView.drawing = newDrawing
+
+            // Show green preview
+            showHoldShapePreview(shape)
+
+            // Set up for tap-to-commit
+            recognizedShape = shape
+            recognizedShapeRect = shape.boundingRect
+            recognizedShapePendingCommit = true
+            recognizedShapeTapGesture.isEnabled = true
+            resizeHandleLayer.isHidden = false
+
+            print("✅ Green preview shown - tap to commit")
             return
         }
 
-        // If in adjusting state, commit the adjusted shape
+        // If in adjusting state, show preview for adjusted shape
         if case .adjustingShape = quickShapeState, let shape = currentHoldShape {
-            commitCleanShape(canvasView, shape)
+            print("🎨 Pencil lifted after adjusting - showing green preview")
+
+            // Save drawing for undo (stroke was already removed during adjustment)
+            drawingBeforeRecognition = canvasView.drawing
+
+            // Show green preview
+            showHoldShapePreview(shape)
+
+            // Set up for tap-to-commit
+            recognizedShape = shape
+            recognizedShapeRect = shape.boundingRect
+            recognizedShapePendingCommit = true
+            recognizedShapeTapGesture.isEnabled = true
+            resizeHandleLayer.isHidden = false
+
+            print("✅ Green preview shown - tap to commit")
+            return
         }
 
         // Reset to idle state
