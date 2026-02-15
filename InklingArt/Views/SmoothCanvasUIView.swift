@@ -325,15 +325,15 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
         recognizedShapeTapGesture.delaysTouchesBegan = false
         scrollView.addGestureRecognizer(recognizedShapeTapGesture)
 
-        // Hold-to-snap preview layer (add to PKCanvas layer so it's visible on top)
+        // Hold-to-snap preview layer (add to contentView so it's ALWAYS visible on top)
         holdPreviewLayer.fillColor = nil
-        holdPreviewLayer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.8).cgColor
-        holdPreviewLayer.lineWidth = 4
+        holdPreviewLayer.strokeColor = UIColor.systemGreen.withAlphaComponent(0.9).cgColor
+        holdPreviewLayer.lineWidth = 8  // Thicker so it's MORE visible
         holdPreviewLayer.lineCap = .round
         holdPreviewLayer.lineJoin = .round
         holdPreviewLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
         holdPreviewLayer.isHidden = true
-        pkCanvasView.layer.addSublayer(holdPreviewLayer)
+        contentView.layer.addSublayer(holdPreviewLayer)  // Add to contentView, not pkCanvasView!
 
         // Grid overlay layer
         gridOverlayLayer.strokeColor = UIColor(white: 0.2, alpha: 0.5).cgColor
