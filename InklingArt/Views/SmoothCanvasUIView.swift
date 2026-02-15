@@ -24,6 +24,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
     private var shapeStartPoint: CGPoint?
     private var shapeEndPoint: CGPoint?
     private var shapePanGesture: UIPanGestureRecognizer!
+    private var shapeStartGesture: UILongPressGestureRecognizer!  // Captures exact touch point
     private var shapeConfirmTapGesture: UITapGestureRecognizer!
     private var shapePendingCommit = false
     private var isMovingShape = false
@@ -267,12 +268,20 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
         selectionPreviewLayer.frame = CGRect(x: 0, y: 0, width: canvasSize, height: canvasSize)
         contentView.layer.addSublayer(selectionPreviewLayer)
 
-        // Shape tool gesture
+        // Shape tool gestures
+        // Long press with 0 duration to capture exact touch point immediately
+        shapeStartGesture = UILongPressGestureRecognizer(target: self, action: #selector(handleShapeStart(_:)))
+        shapeStartGesture.minimumPressDuration = 0
+        shapeStartGesture.isEnabled = false
+        shapeStartGesture.delegate = self
+        scrollView.addGestureRecognizer(shapeStartGesture)
+
         shapePanGesture = UIPanGestureRecognizer(target: self, action: #selector(handleShapePan(_:)))
         shapePanGesture.isEnabled = false
         shapePanGesture.maximumNumberOfTouches = 1
         shapePanGesture.delaysTouchesBegan = false
         shapePanGesture.delaysTouchesEnded = false
+        shapePanGesture.delegate = self  // Enable simultaneous gestures
         scrollView.addGestureRecognizer(shapePanGesture)
 
         // Shape confirm tap gesture
@@ -472,6 +481,12 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
 
     func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer,
                           shouldRecognizeSimultaneouslyWith otherGestureRecognizer: UIGestureRecognizer) -> Bool {
+        // Allow shapeStartGesture and shapePanGesture to work together
+        if (gestureRecognizer == shapeStartGesture && otherGestureRecognizer == shapePanGesture) ||
+           (gestureRecognizer == shapePanGesture && otherGestureRecognizer == shapeStartGesture) {
+            return true
+        }
+
         // Allow rotation + zoom together
         if (gestureRecognizer == rotationGesture && otherGestureRecognizer == scrollView.pinchGestureRecognizer) ||
            (gestureRecognizer == scrollView.pinchGestureRecognizer && otherGestureRecognizer == rotationGesture) {
@@ -596,6 +611,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeStartGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = false
@@ -608,6 +624,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeStartGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = false
@@ -619,6 +636,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeStartGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = true
@@ -630,6 +648,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             scrollView.isScrollEnabled = true
             scrollView.pinchGestureRecognizer?.isEnabled = true
             shapePanGesture.isEnabled = false
+            shapeStartGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = true
             fillTapGesture.isEnabled = false
@@ -641,6 +660,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             scrollView.isScrollEnabled = false
             scrollView.pinchGestureRecognizer?.isEnabled = false
             shapePanGesture.isEnabled = true
+            shapeStartGesture.isEnabled = true  // Enable to capture exact touch point
             shapeConfirmTapGesture.isEnabled = true
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = false
@@ -652,6 +672,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             scrollView.isScrollEnabled = false
             scrollView.pinchGestureRecognizer?.isEnabled = false
             shapePanGesture.isEnabled = false
+            shapeStartGesture.isEnabled = false
             shapeConfirmTapGesture.isEnabled = false
             eyedropperTapGesture.isEnabled = false
             fillTapGesture.isEnabled = false
@@ -748,11 +769,12 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
 
     // MARK: - Shape Tool
 
-    @objc private func handleShapePan(_ gesture: UIPanGestureRecognizer) {
+    @objc private func handleShapeStart(_ gesture: UILongPressGestureRecognizer) {
         let location = gesture.location(in: contentView)
 
         switch gesture.state {
         case .began:
+            // Capture exact touch point immediately
             if shapePendingCommit, isPointNearShape(location) {
                 // Start moving the pending shape
                 isMovingShape = true
@@ -768,6 +790,39 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
                 isDrawingShape = true
                 isMovingShape = false
                 updateShapePreview()
+            }
+
+        case .ended, .cancelled, .failed:
+            // Let the pan gesture handle the end state
+            break
+
+        default:
+            break
+        }
+    }
+
+    @objc private func handleShapePan(_ gesture: UIPanGestureRecognizer) {
+        let location = gesture.location(in: contentView)
+
+        switch gesture.state {
+        case .began:
+            // Start point already captured by shapeStartGesture
+            // Just update if needed
+            if !isDrawingShape && !isMovingShape {
+                if shapePendingCommit, isPointNearShape(location) {
+                    isMovingShape = true
+                    lastPanLocation = location
+                } else {
+                    if shapePendingCommit {
+                        commitShape()
+                        clearShapePendingState()
+                    }
+                    shapeStartPoint = location
+                    shapeEndPoint = location
+                    isDrawingShape = true
+                    isMovingShape = false
+                    updateShapePreview()
+                }
             }
 
         case .changed:
