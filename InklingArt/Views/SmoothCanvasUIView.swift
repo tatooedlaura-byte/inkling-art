@@ -2047,9 +2047,21 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             if let center = shape.arcCenter, let radius = shape.arcRadius,
                let startAngle = shape.arcStartAngle, let endAngle = shape.arcEndAngle {
                 let segments = 30
+                let clockwise = shape.arcClockwise ?? false
+
+                // Calculate sweep angle accounting for direction
+                var sweep = endAngle - startAngle
+                if clockwise {
+                    // For clockwise, we go backwards
+                    if sweep > 0 { sweep -= 2 * .pi }
+                } else {
+                    // For counter-clockwise, we go forwards
+                    if sweep < 0 { sweep += 2 * .pi }
+                }
+
                 for i in 0...segments {
                     let t = CGFloat(i) / CGFloat(segments)
-                    let angle = startAngle + (endAngle - startAngle) * t
+                    let angle = startAngle + sweep * t
                     let x = center.x + radius * cos(angle)
                     let y = center.y + radius * sin(angle)
                     addPoint(CGPoint(x: x, y: y), time: Double(i) * 0.01)

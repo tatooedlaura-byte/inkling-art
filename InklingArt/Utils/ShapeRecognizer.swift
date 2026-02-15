@@ -123,10 +123,10 @@ struct ShapeRecognizer {
 
         let directDistance = hypot(end.x - start.x, end.y - start.y)
 
-        // Must not be too closed (that's a circle/rectangle) and not too straight (that's a line)
-        // Increased minimum closeness from 0.15 to 0.35 to prevent squares from being detected as arcs
+        // Must not be too closed (that's a circle) and not too straight (that's a line)
+        // Lower threshold (0.20) allows subtle arcs, higher (0.70) prevents straight lines
         let closeness = directDistance / pathLength
-        guard closeness > 0.35, closeness < 0.70 else { return nil }
+        guard closeness > 0.20, closeness < 0.70 else { return nil }
 
         // CRITICAL: Reject anything with sharp corners (like rectangles/squares)
         // Sample points and check for sudden direction changes
