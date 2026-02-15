@@ -83,7 +83,7 @@ struct ToolbarView: View {
         case .smooth:
             return tool != .fill
         case .dotArt:
-            return tool == .eraser || tool == .eyedropper
+            return tool == .pencil || tool == .eraser || tool == .eyedropper
         }
     }
 
