@@ -29,21 +29,13 @@ struct ShapeRecognizer {
 
         print("🔍 ShapeRecognizer: Analyzing \(points.count) points...")
 
-        // Only detect lines and arcs (simplified, more reliable)
-
-        // Check line first (most specific)
+        // Only detect straight lines (most useful and reliable)
         if let line = detectLine(points: points) {
             print("✅ ShapeRecognizer: Detected LINE")
             return line
         }
 
-        // Check arc
-        if let arc = detectArc(points: points) {
-            print("✅ ShapeRecognizer: Detected ARC")
-            return arc
-        }
-
-        print("❌ ShapeRecognizer: No shape detected (only lines and arcs supported)")
+        print("❌ ShapeRecognizer: No shape detected (only straight lines supported)")
         return nil
     }
 
