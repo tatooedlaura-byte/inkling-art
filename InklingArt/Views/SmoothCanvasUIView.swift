@@ -1608,6 +1608,9 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             // Show green preview
             showHoldShapePreview(shape)
 
+            // Disable PKCanvasView so taps reach the tap gesture
+            pkCanvasView.isUserInteractionEnabled = false
+
             // Set up for tap-to-commit
             recognizedShape = shape
             recognizedShapeRect = shape.boundingRect
@@ -1615,7 +1618,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             recognizedShapeTapGesture.isEnabled = true
             resizeHandleLayer.isHidden = false
 
-            print("✅ Green preview shown - tap to commit")
+            print("✅ Green preview shown - tap to commit (PKCanvasView disabled)")
             return
         }
 
@@ -1629,6 +1632,9 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             // Show green preview
             showHoldShapePreview(shape)
 
+            // Disable PKCanvasView so taps reach the tap gesture
+            pkCanvasView.isUserInteractionEnabled = false
+
             // Set up for tap-to-commit
             recognizedShape = shape
             recognizedShapeRect = shape.boundingRect
@@ -1636,7 +1642,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
             recognizedShapeTapGesture.isEnabled = true
             resizeHandleLayer.isHidden = false
 
-            print("✅ Green preview shown - tap to commit")
+            print("✅ Green preview shown - tap to commit (PKCanvasView disabled)")
             return
         }
 
@@ -2030,8 +2036,16 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
         newDrawing.strokes.append(stroke)
         setDrawingWithUndo(newDrawing)
 
+        // Hide the green preview
+        holdPreviewLayer.isHidden = true
+
+        // Reset QuickShape state
+        resetQuickShape()
+
         exitRecognizedShapeMode()
         delegate?.canvasDidChange()
+
+        print("✅ Shape committed and canvas restored!")
     }
 
     // MARK: - Hold-to-Snap Gesture
