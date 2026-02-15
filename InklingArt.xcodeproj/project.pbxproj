@@ -37,6 +37,9 @@
 		A1000020 /* ResizeHandleLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = A2000020 /* ResizeHandleLayer.swift */; };
 		BC959A6BD21AFF6A7D9657E1 /* SmoothCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A97827FDD49AF4320929D44A /* SmoothCanvasView.swift */; };
 		D793CB0474BCB659FEADDA5C /* CharacterTemplate.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6A92423BFD09E9901ABF9FF /* CharacterTemplate.swift */; };
+		5B58FB797BD24CA9A2CB3A09 /* DotMark.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2301D3291B4AC59DA2CFBA /* DotMark.swift */; };
+		78897BE9BBFD409E9683A050 /* DotArtCanvasUIView.swift in Sources */ = {isa = PBXBuildFile; fileRef = CE3A70F3DB714D48B2983356 /* DotArtCanvasUIView.swift */; };
+		48909CEC20D642268D9418BE /* DotArtCanvasView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D78EA413058C45E3A076C4A0 /* DotArtCanvasView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -86,12 +89,15 @@
 		A2000018 /* LayerPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayerPanelView.swift; sourceTree = "<group>"; };
 		A2000019 /* ShapeRecognizer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ShapeRecognizer.swift; sourceTree = "<group>"; };
 		A2000020 /* ResizeHandleLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ResizeHandleLayer.swift; sourceTree = "<group>"; };
-		A3000001 /* how come.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "how come.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A3000001 /* inklingart.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = inklingart.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A97827FDD49AF4320929D44A /* SmoothCanvasView.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = SmoothCanvasView.swift; sourceTree = "<group>"; };
 		B8D0FCFDC93E9B3D1B52510F /* VectorCanvas.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = VectorCanvas.swift; path = SmoothArtEditor/Models/VectorCanvas.swift; sourceTree = "<group>"; };
 		C6A92423BFD09E9901ABF9FF /* CharacterTemplate.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = CharacterTemplate.swift; sourceTree = "<group>"; };
 		D76521F9181A917A315506B4 /* SmoothArtApp.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; name = SmoothArtApp.swift; path = SmoothArtEditor/App/SmoothArtApp.swift; sourceTree = "<group>"; };
 		ED56E4E6F6356BC938371991 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS18.0.sdk/System/Library/Frameworks/Foundation.framework; sourceTree = DEVELOPER_DIR; };
+		ED2301D3291B4AC59DA2CFBA /* DotMark.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotMark.swift; sourceTree = "<group>"; };
+		CE3A70F3DB714D48B2983356 /* DotArtCanvasUIView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotArtCanvasUIView.swift; sourceTree = "<group>"; };
+		D78EA413058C45E3A076C4A0 /* DotArtCanvasView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DotArtCanvasView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -194,6 +200,8 @@
 			isa = PBXGroup;
 			children = (
 				A2000002 /* ContentView.swift */,
+				D78EA413058C45E3A076C4A0 /* DotArtCanvasView.swift */,
+				CE3A70F3DB714D48B2983356 /* DotArtCanvasUIView.swift */,
 				A2000003 /* CanvasView.swift */,
 				A2000004 /* PixelCanvasUIView.swift */,
 				A2000005 /* ToolbarView.swift */,
@@ -225,7 +233,7 @@
 		A5000006 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				A3000001 /* how come.app */,
+				A3000001 /* inklingart.app */,
 				6EBABA382DBF2C0D82187D6C /* SmoothArtEditor.app */,
 			);
 			name = Products;
@@ -235,6 +243,7 @@
 			isa = PBXGroup;
 			children = (
 				A2000008 /* PixelGrid.swift */,
+				ED2301D3291B4AC59DA2CFBA /* DotMark.swift */,
 				A2000009 /* Tool.swift */,
 				A200000A /* Palette.swift */,
 				A200000D /* CharacterTemplates.swift */,
@@ -270,9 +279,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A6000001 /* how come */ = {
+		A6000001 /* inklingart */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A8000003 /* Build configuration list for PBXNativeTarget "how come" */;
+			buildConfigurationList = A8000003 /* Build configuration list for PBXNativeTarget "inklingart" */;
 			buildPhases = (
 				A7000001 /* Sources */,
 				A4000001 /* Frameworks */,
@@ -282,9 +291,9 @@
 			);
 			dependencies = (
 			);
-			name = "how come";
+			name = inklingart;
 			productName = InklingArt;
-			productReference = A3000001 /* how come.app */;
+			productReference = A3000001 /* inklingart.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -310,7 +319,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A6000001 /* how come */,
+				A6000001 /* inklingart */,
 			);
 		};
 /* End PBXProject section */
@@ -360,6 +369,9 @@
 				D793CB0474BCB659FEADDA5C /* CharacterTemplate.swift in Sources */,
 				A1000019 /* ShapeRecognizer.swift in Sources */,
 				A1000020 /* ResizeHandleLayer.swift in Sources */,
+				5B58FB797BD24CA9A2CB3A09 /* DotMark.swift in Sources */,
+				78897BE9BBFD409E9683A050 /* DotArtCanvasUIView.swift in Sources */,
+				48909CEC20D642268D9418BE /* DotArtCanvasView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -487,7 +499,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		A8000003 /* Build configuration list for PBXNativeTarget "how come" */ = {
+		A8000003 /* Build configuration list for PBXNativeTarget "inklingart" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				AA000003 /* Debug */,

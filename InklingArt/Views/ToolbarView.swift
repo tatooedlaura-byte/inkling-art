@@ -11,21 +11,20 @@ struct ToolbarView: View {
     var body: some View {
         VStack(spacing: 8) {
             ForEach(Tool.allCases) { tool in
-                // Hide fill tool in smooth mode
-                if tool == .fill && canvasMode == .smooth {
-                    EmptyView()
-                } else if tool == .shape {
-                    shapeButton
-                } else {
-                    Button {
-                        selectedTool = tool
-                    } label: {
-                        Image(systemName: tool.iconName)
-                            .font(.title2)
-                            .frame(width: 44, height: 44)
-                            .background(selectedTool == tool ? Color.accentColor : Color(.systemGray5))
-                            .foregroundColor(selectedTool == tool ? .white : .primary)
-                            .cornerRadius(10)
+                if shouldShowTool(tool) {
+                    if tool == .shape {
+                        shapeButton
+                    } else {
+                        Button {
+                            selectedTool = tool
+                        } label: {
+                            Image(systemName: tool.iconName)
+                                .font(.title2)
+                                .frame(width: 44, height: 44)
+                                .background(selectedTool == tool ? Color.accentColor : Color(.systemGray5))
+                                .foregroundColor(selectedTool == tool ? .white : .primary)
+                                .cornerRadius(10)
+                        }
                     }
                 }
             }
@@ -34,6 +33,17 @@ struct ToolbarView: View {
         .background(.ultraThinMaterial)
         .cornerRadius(14)
         .shadow(radius: 4)
+    }
+
+    private func shouldShowTool(_ tool: Tool) -> Bool {
+        switch canvasMode {
+        case .pixel:
+            return true
+        case .smooth:
+            return tool != .fill
+        case .dotArt:
+            return tool == .eraser || tool == .eyedropper
+        }
     }
 
     private var shapeButton: some View {

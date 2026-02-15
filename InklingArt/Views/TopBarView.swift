@@ -15,6 +15,7 @@ struct TopBarView: View {
     @Binding var showLayerPanel: Bool
     @Binding var shapeRecognitionEnabled: Bool
     @Binding var showGridOverlay: Bool
+    @Binding var gridSnapEnabled: Bool
     var onResetLayers: (() -> Void)?
     @ObservedObject var canvasStore: CanvasStore
     @ObservedObject var animationStore: AnimationStore
@@ -116,12 +117,14 @@ struct TopBarView: View {
             Picker("Mode", selection: $canvasMode) {
                 Text("Pixel").tag(CanvasMode.pixel)
                 Text("Smooth").tag(CanvasMode.smooth)
+                Text("Dot Art").tag(CanvasMode.dotArt)
             }
             .pickerStyle(.segmented)
-            .frame(width: 140)
+            .frame(width: 210)
 
-            // Grid size picker (pixel mode) / Brush width (smooth mode)
-            if canvasMode == .pixel {
+            // Mode-specific controls
+            switch canvasMode {
+            case .pixel:
                 Menu {
                     ForEach(sizes, id: \.self) { size in
                         Menu("\(size)×\(size)") {
@@ -169,7 +172,8 @@ struct TopBarView: View {
                     .background(showGridOverlay ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
                     .cornerRadius(8)
                 }
-            } else {
+
+            case .smooth:
                 // Template menu for smooth mode
                 Menu {
                     Menu("Character Template") {
@@ -256,6 +260,21 @@ struct TopBarView: View {
                     .cornerRadius(8)
                 }
 
+            case .dotArt:
+                // Dot art mode - grid snap toggle
+                Button {
+                    gridSnapEnabled.toggle()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: gridSnapEnabled ? "grid.circle.fill" : "grid.circle")
+                        Text(gridSnapEnabled ? "Grid Snap" : "Freestyle")
+                            .font(.subheadline)
+                    }
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(gridSnapEnabled ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
+                    .cornerRadius(8)
+                }
             }
 
             // Reference image menu
@@ -306,10 +325,13 @@ struct TopBarView: View {
 
             // Zoom
             Button {
-                if canvasMode == .pixel {
+                switch canvasMode {
+                case .pixel:
                     canvasStore.canvasView?.zoomOut()
-                } else {
+                case .smooth:
                     canvasStore.smoothCanvasView?.zoomOut()
+                case .dotArt:
+                    canvasStore.dotArtCanvasView?.zoomOut()
                 }
             } label: {
                 Image(systemName: "minus.magnifyingglass")
@@ -317,10 +339,13 @@ struct TopBarView: View {
             }
 
             Button {
-                if canvasMode == .pixel {
+                switch canvasMode {
+                case .pixel:
                     canvasStore.canvasView?.zoomIn()
-                } else {
+                case .smooth:
                     canvasStore.smoothCanvasView?.zoomIn()
+                case .dotArt:
+                    canvasStore.dotArtCanvasView?.zoomIn()
                 }
             } label: {
                 Image(systemName: "plus.magnifyingglass")
@@ -328,10 +353,13 @@ struct TopBarView: View {
             }
 
             Button {
-                if canvasMode == .pixel {
+                switch canvasMode {
+                case .pixel:
                     canvasStore.canvasView?.resetZoom()
-                } else {
+                case .smooth:
                     canvasStore.smoothCanvasView?.resetZoom()
+                case .dotArt:
+                    canvasStore.dotArtCanvasView?.resetZoom()
                 }
             } label: {
                 Image(systemName: "arrow.counterclockwise.magnifyingglass")
@@ -480,6 +508,7 @@ struct TopBarView: View {
             animationStore.loadFrameToCanvas(cv, index: 0)
         }
         canvasStore.smoothCanvasView?.clearCanvas()
+        canvasStore.dotArtCanvasView?.clearCanvas()
         onResetLayers?()
     }
 
@@ -493,6 +522,7 @@ struct TopBarView: View {
             animationStore.loadFrameToCanvas(cv, index: 0)
         }
         canvasStore.smoothCanvasView?.clearCanvas()
+        canvasStore.dotArtCanvasView?.clearCanvas()
         onResetLayers?()
     }
 

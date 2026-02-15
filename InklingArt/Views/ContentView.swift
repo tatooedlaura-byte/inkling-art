@@ -23,6 +23,7 @@ struct ContentView: View {
     @State private var shapeRecognitionEnabled: Bool = true
     @State private var layerUpdateTrigger: Int = 0
     @State private var showGridOverlay: Bool = false
+    @State private var gridSnapEnabled: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,6 +40,7 @@ struct ContentView: View {
                 showLayerPanel: $showLayerPanel,
                 shapeRecognitionEnabled: $shapeRecognitionEnabled,
                 showGridOverlay: $showGridOverlay,
+                gridSnapEnabled: $gridSnapEnabled,
                 onResetLayers: {
                     layers = [DrawingLayer(name: "Layer 1")]
                     activeLayerIndex = 0
@@ -50,7 +52,8 @@ struct ContentView: View {
 
             ZStack(alignment: .leading) {
                 // Canvas - switch based on mode
-                if canvasMode == .pixel {
+                switch canvasMode {
+                case .pixel:
                     CanvasView(
                         currentColor: $currentColor,
                         currentTool: $currentTool,
@@ -70,7 +73,8 @@ struct ContentView: View {
                         animationStore: animationStore
                     )
                     .background(Color(.systemGray6))
-                } else {
+
+                case .smooth:
                     SmoothCanvasView(
                         currentColor: $currentColor,
                         currentTool: $currentTool,
@@ -97,6 +101,21 @@ struct ContentView: View {
                                let smoothView = canvasStore.smoothCanvasView {
                                 layers[activeLayerIndex].drawing = smoothView.drawing
                             }
+                        }
+                    )
+                    .background(Color(.systemGray6))
+
+                case .dotArt:
+                    DotArtCanvasView(
+                        currentColor: $currentColor,
+                        currentTool: $currentTool,
+                        gridSnapEnabled: $gridSnapEnabled,
+                        undoTrigger: $undoTrigger,
+                        redoTrigger: $redoTrigger,
+                        canvasStore: canvasStore,
+                        onPickColor: { color in
+                            currentColor = color
+                            currentTool = .pencil
                         }
                     )
                     .background(Color(.systemGray6))

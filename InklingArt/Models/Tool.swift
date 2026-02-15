@@ -3,6 +3,7 @@ import Foundation
 enum CanvasMode: String, CaseIterable {
     case pixel
     case smooth
+    case dotArt
 }
 
 enum ShapeKind: String, CaseIterable, Identifiable {
