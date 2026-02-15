@@ -1459,7 +1459,7 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
 
         guard let currentPoint = dragStroke.path.last?.location else { return }
 
-        print("📏 Adjusting shape: drag from \(\(dragStart)) to \(currentPoint)")
+        print("📏 Adjusting shape: drag from \(dragStart) to \(currentPoint)")
 
         // Calculate adjustment
         let dx = currentPoint.x - dragStart.x
