@@ -8,6 +8,11 @@ struct ToolbarView: View {
     var canvasMode: CanvasMode = .pixel
     @State private var showShapePicker = false
 
+    // Smooth mode toggles
+    @Binding var showGridOverlay: Bool
+    @Binding var mirrorModeEnabled: Bool
+    @Binding var showLayerPanel: Bool
+
     var body: some View {
         VStack(spacing: 8) {
             ForEach(Tool.allCases) { tool in
@@ -26,6 +31,48 @@ struct ToolbarView: View {
                                 .cornerRadius(10)
                         }
                     }
+                }
+            }
+
+            // Add divider and smooth mode buttons
+            if canvasMode == .smooth {
+                Divider()
+                    .padding(.vertical, 4)
+
+                // Grid button
+                Button {
+                    showGridOverlay.toggle()
+                } label: {
+                    Image(systemName: showGridOverlay ? "grid.circle.fill" : "grid.circle")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                        .background(showGridOverlay ? Color.accentColor : Color(.systemGray5))
+                        .foregroundColor(showGridOverlay ? .white : .primary)
+                        .cornerRadius(10)
+                }
+
+                // Mirror button
+                Button {
+                    mirrorModeEnabled.toggle()
+                } label: {
+                    Image(systemName: mirrorModeEnabled ? "arrow.left.and.right.circle.fill" : "arrow.left.and.right.circle")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                        .background(mirrorModeEnabled ? Color.accentColor : Color(.systemGray5))
+                        .foregroundColor(mirrorModeEnabled ? .white : .primary)
+                        .cornerRadius(10)
+                }
+
+                // Layers button
+                Button {
+                    showLayerPanel.toggle()
+                } label: {
+                    Image(systemName: "square.3.layers.3d")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                        .background(showLayerPanel ? Color.accentColor : Color(.systemGray5))
+                        .foregroundColor(showLayerPanel ? .white : .primary)
+                        .cornerRadius(10)
                 }
             }
         }

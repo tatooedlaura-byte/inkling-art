@@ -128,7 +128,10 @@ struct ContentView: View {
                 ToolbarView(selectedTool: $currentTool,
                            selectedShapeKind: $currentShapeKind,
                            shapeFilled: $shapeFilled,
-                           canvasMode: canvasMode)
+                           canvasMode: canvasMode,
+                           showGridOverlay: $showGridOverlay,
+                           mirrorModeEnabled: $mirrorModeEnabled,
+                           showLayerPanel: $showLayerPanel)
                     .padding(.leading, 12)
 
                 // Layer panel on the right (smooth mode only)
