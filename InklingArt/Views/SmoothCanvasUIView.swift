@@ -1586,6 +1586,12 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
 
         // If shape was recognized while pencil was down, show green preview on lift
         if case .shapeSnapped = quickShapeState, let shape = currentHoldShape {
+            // Prevent processing multiple times - if drawing is already empty, we've already shown preview
+            if canvasView.drawing.strokes.count == 0 {
+                print("⏭️ Skipping - preview already shown")
+                return
+            }
+
             print("🎨 Pencil lifted - showing green preview")
 
             // Save drawing before removing wobbly stroke (for undo)
@@ -1877,15 +1883,23 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
     }
 
     @objc private func handleRecognizedShapeTap(_ gesture: UITapGestureRecognizer) {
-        guard recognizedShapePendingCommit else { return }
+        print("👆 Tap detected! recognizedShapePendingCommit=\(recognizedShapePendingCommit)")
+        guard recognizedShapePendingCommit else {
+            print("❌ No shape pending commit")
+            return
+        }
+        print("✅ Committing recognized shape...")
         commitRecognizedShape()
     }
 
     private func commitRecognizedShape() {
+        print("🔄 commitRecognizedShape called")
         guard let shape = recognizedShape, let rect = recognizedShapeRect else {
+            print("❌ No shape or rect")
             exitRecognizedShapeMode()
             return
         }
+        print("✅ Shape and rect exist, creating stroke...")
 
         let ink: PKInk
         if #available(iOS 17.0, *) {
