@@ -1556,10 +1556,16 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate, UI
         print("🔄 Committing clean shape...")
 
         var newDrawing = canvasView.drawing
-        // Note: wobbly stroke was already removed when shape snapped!
+
+        // Remove the wobbly stroke FIRST!
+        if newDrawing.strokes.count > 0 {
+            newDrawing.strokes.removeLast()
+            print("🗑️ Removed wobbly stroke")
+        }
 
         let cleanStroke = createStrokeFromShape(shape)
         newDrawing.strokes.append(cleanStroke)
+        print("✅ Added clean stroke")
 
         // Mirror if enabled
         if mirrorModeEnabled {
