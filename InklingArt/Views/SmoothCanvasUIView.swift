@@ -1128,14 +1128,34 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
 
                 print("📊 Stroke continuing: points=\(currentPointCount) last=\(lastStrokePointCount)")
 
-                // Only reset timer if stroke is actually growing (not just tiny movements)
-                if currentPointCount > lastStrokePointCount + 3 {
-                    // Stroke is actively growing - reset timer
-                    print("📈 Stroke growing - resetting timer")
-                    lastStrokePointCount = currentPointCount
-                    startHoldGestureTimer(canvasView)
+                // Only reset timer if stroke is actually growing significantly
+                // Check if stroke length has increased by more than 10pt (not just point count)
+                // This prevents natural hand tremor from constantly resetting the timer
+                if currentPointCount > lastStrokePointCount + 15 {
+                    // Check if the stroke has actually grown in length
+                    var strokeLengthGrowth: CGFloat = 0
+                    if currentPointCount > 15 && lastStrokePointCount > 0 {
+                        // Calculate length added since last check
+                        let startIdx = max(0, lastStrokePointCount - 1)
+                        for i in startIdx..<(currentPointCount - 1) {
+                            let p1 = lastStroke.path[i].location
+                            let p2 = lastStroke.path[i + 1].location
+                            strokeLengthGrowth += hypot(p2.x - p1.x, p2.y - p1.y)
+                        }
+                    }
+
+                    // Only reset if significant movement (>10pt of actual drawing)
+                    if strokeLengthGrowth > 10 {
+                        print("📈 Stroke growing significantly (length: \(strokeLengthGrowth)pt) - resetting timer")
+                        lastStrokePointCount = currentPointCount
+                        startHoldGestureTimer(canvasView)
+                    } else {
+                        print("🤏 Minor movement (length: \(strokeLengthGrowth)pt) - ignoring, letting timer fire")
+                    }
+                } else {
+                    // Point count hasn't grown much, let timer fire (user is holding still)
+                    print("⏸️ Holding still (\(currentPointCount - lastStrokePointCount) new points) - letting timer fire")
                 }
-                // If point count hasn't grown much, let timer fire (user is holding still)
             }
         } else {
             print("❌ Hold detection blocked: snap=\(shapeRecognitionEnabled) tool=\(currentTool.rawValue) pending=\(recognizedShapePendingCommit) holding=\(isHoldingForSnap)")
@@ -1616,13 +1636,20 @@ class SmoothCanvasUIView: UIView, PKCanvasViewDelegate, UIScrollViewDelegate {
             recognizedShapePendingCommit = true
             isHoldingForSnap = true
 
+            // Enable second finger tap for perfect shape snapping
+            if canShapeBeSnappedToPerfect(shape) {
+                canSnapToPerfectShape = true
+                secondFingerTapGesture.isEnabled = true
+                print("✅ Second finger tap enabled for perfect shape snap")
+            }
+
             print("✅ Preview shown! Continue dragging or lift to commit")
 
             // Provide haptic feedback
             let generator = UIImpactFeedbackGenerator(style: .medium)
             generator.impactOccurred()
 
-            print("🎯 Entered resize mode - drag to resize, lift to commit")
+            print("🎯 Entered resize mode - drag to resize, lift to commit, second finger to perfect")
         } else {
             print("❌ No shape recognized from \(points.count) points")
         }

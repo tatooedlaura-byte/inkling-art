@@ -24,21 +24,27 @@ struct ShapeRecognizer {
     static func recognize(points: [CGPoint]) -> RecognizedShape? {
         guard points.count >= 4 else { return nil }
 
+        // Check line first (most specific, open shape)
         if let line = detectLine(points: points) {
             return line
         }
-        if let arc = detectArc(points: points) {
-            return arc
-        }
+
+        // Check closed shapes before arcs (prevents boxes from being detected as arcs)
         if let rect = detectRectangle(points: points) {
             return rect
-        }
-        if let triangle = detectTriangle(points: points) {
-            return triangle
         }
         if let circle = detectCircle(points: points) {
             return circle
         }
+        if let triangle = detectTriangle(points: points) {
+            return triangle
+        }
+
+        // Check arc last (most permissive, open shape)
+        if let arc = detectArc(points: points) {
+            return arc
+        }
+
         return nil
     }
 
