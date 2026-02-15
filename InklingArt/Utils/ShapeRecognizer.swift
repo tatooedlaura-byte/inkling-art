@@ -124,9 +124,10 @@ struct ShapeRecognizer {
 
         let directDistance = hypot(end.x - start.x, end.y - start.y)
 
-        // Must not be too closed (that's a circle) and not too straight (that's a line)
+        // Must not be too closed (that's a circle/rectangle) and not too straight (that's a line)
+        // Increased minimum closeness from 0.15 to 0.35 to prevent squares from being detected as arcs
         let closeness = directDistance / pathLength
-        guard closeness > 0.15, closeness < 0.70 else { return nil }
+        guard closeness > 0.35, closeness < 0.70 else { return nil }
 
         // Fit a circle through the points using least-squares
         // Use three reference points: start, middle, end
@@ -423,16 +424,17 @@ struct ShapeRecognizer {
 
         guard diagonal > 10 else { return nil }
 
-        // Must be closed (allow 20% gap for hand-drawn shapes)
+        // Must be closed (allow 30% gap for hand-drawn shapes)
+        // Increased from 20% to 30% to catch more hand-drawn rectangles
         let closeDist = hypot(end.x - start.x, end.y - start.y)
-        guard closeDist / diagonal < 0.20 else { return nil }
+        guard closeDist / diagonal < 0.30 else { return nil }
 
         // Resample to 64 equidistant points
         let resampled = resample(points: points, count: 64)
 
         // Find corners using a wider window for smoother detection
         var cornerIndices: [Int] = []
-        let threshold = CGFloat.pi * 30 / 180  // 30 degrees
+        let threshold = CGFloat.pi * 25 / 180  // 25 degrees (was 30, more sensitive now)
         let windowSize = 4
 
         for i in windowSize..<(resampled.count - windowSize) {
@@ -473,8 +475,8 @@ struct ShapeRecognizer {
             }
         }
 
-        // Need 3–5 corners for a rectangle
-        guard cornerIndices.count >= 3, cornerIndices.count <= 5 else { return nil }
+        // Need 3–6 corners for a rectangle (was 3-5, now more lenient)
+        guard cornerIndices.count >= 3, cornerIndices.count <= 6 else { return nil }
 
         // Check that each edge segment between corners is roughly straight (< 12% deviation)
         let allCorners = [0] + cornerIndices + [resampled.count - 1]
