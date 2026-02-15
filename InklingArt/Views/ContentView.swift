@@ -129,6 +129,8 @@ struct ContentView: View {
                            selectedShapeKind: $currentShapeKind,
                            shapeFilled: $shapeFilled,
                            showLayerPanel: $showLayerPanel,
+                           mirrorModeEnabled: $mirrorModeEnabled,
+                           showGridOverlay: $showGridOverlay,
                            canvasMode: canvasMode)
                     .padding(.leading, 12)
 

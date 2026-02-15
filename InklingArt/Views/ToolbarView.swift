@@ -6,6 +6,8 @@ struct ToolbarView: View {
     @Binding var selectedShapeKind: ShapeKind
     @Binding var shapeFilled: Bool
     @Binding var showLayerPanel: Bool
+    @Binding var mirrorModeEnabled: Bool
+    @Binding var showGridOverlay: Bool
     var canvasMode: CanvasMode = .pixel
     @State private var showShapePicker = false
 
@@ -40,6 +42,30 @@ struct ToolbarView: View {
                         .frame(width: 44, height: 44)
                         .background(showLayerPanel ? Color.accentColor : Color(.systemGray5))
                         .foregroundColor(showLayerPanel ? .white : .primary)
+                        .cornerRadius(10)
+                }
+
+                // Mirror button
+                Button {
+                    mirrorModeEnabled.toggle()
+                } label: {
+                    Image(systemName: mirrorModeEnabled ? "arrow.left.and.right.circle.fill" : "arrow.left.and.right.circle")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                        .background(mirrorModeEnabled ? Color.accentColor : Color(.systemGray5))
+                        .foregroundColor(mirrorModeEnabled ? .white : .primary)
+                        .cornerRadius(10)
+                }
+
+                // Grid button
+                Button {
+                    showGridOverlay.toggle()
+                } label: {
+                    Image(systemName: showGridOverlay ? "grid.circle.fill" : "grid.circle")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                        .background(showGridOverlay ? Color.accentColor : Color(.systemGray5))
+                        .foregroundColor(showGridOverlay ? .white : .primary)
                         .cornerRadius(10)
                 }
             }

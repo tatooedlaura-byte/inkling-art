@@ -231,36 +231,6 @@ struct TopBarView: View {
                 .background(Color(.systemGray5))
                 .cornerRadius(8)
 
-                // Grid overlay toggle
-                Button {
-                    showGridOverlay.toggle()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: showGridOverlay ? "grid.circle.fill" : "grid.circle")
-                        Text("Grid")
-                            .font(.subheadline)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(showGridOverlay ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
-                    .cornerRadius(8)
-                }
-
-                // Mirror mode toggle
-                Button {
-                    mirrorModeEnabled.toggle()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: mirrorModeEnabled ? "arrow.left.and.right.circle.fill" : "arrow.left.and.right.circle")
-                        Text("Mirror")
-                            .font(.subheadline)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(mirrorModeEnabled ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
-                    .cornerRadius(8)
-                }
-
             case .dotArt:
                 // Dot art mode - grid snap toggle
                 Button {
