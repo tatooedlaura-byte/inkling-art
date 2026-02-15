@@ -93,9 +93,27 @@ enum CharacterTemplate {
             )
             ctx.strokeEllipse(in: headRect)
 
+            // === DRESS OPTION (triangle/A-line) ===
+            // Dashed triangle as alternative to body rectangle
+            ctx.setLineDash(phase: 0, lengths: [12, 8])
+            ctx.setStrokeColor(UIColor(red: 0.3, green: 0.5, blue: 0.3, alpha: 0.8).cgColor)
+            ctx.setLineWidth(8)
+
+            // Triangle dress: starts at shoulders (y=28), flares out to knees (y=8)
+            // Top: x=-7 to 7 (shoulders width)
+            // Bottom: x=-10 to 10 (wider at bottom)
+            ctx.move(to: CGPoint(x: screenX(-7), y: screenY(28)))  // Top left shoulder
+            ctx.addLine(to: CGPoint(x: screenX(-10), y: screenY(8)))  // Bottom left (knee)
+            ctx.addLine(to: CGPoint(x: screenX(10), y: screenY(8)))   // Bottom right (knee)
+            ctx.addLine(to: CGPoint(x: screenX(7), y: screenY(28)))   // Top right shoulder
+            ctx.addLine(to: CGPoint(x: screenX(-7), y: screenY(28)))  // Close triangle
+            ctx.strokePath()
+
             // === ARMS (lines from shoulders) ===
             // Shoulders at y=24 (body top - 4), x=±7
             // Arms extend down and out to x=±10, y=16
+            ctx.setLineDash(phase: 0, lengths: [])  // Reset to solid lines
+            ctx.setStrokeColor(templateColor.cgColor)
             ctx.setLineWidth(8)
 
             // Left arm
