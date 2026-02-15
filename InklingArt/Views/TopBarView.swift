@@ -231,21 +231,6 @@ struct TopBarView: View {
                 .background(Color(.systemGray5))
                 .cornerRadius(8)
 
-                // Layers button
-                Button {
-                    showLayerPanel.toggle()
-                } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "square.3.layers.3d")
-                        Text("Layers")
-                            .font(.subheadline)
-                    }
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(showLayerPanel ? Color.accentColor.opacity(0.2) : Color(.systemGray5))
-                    .cornerRadius(8)
-                }
-
                 // Grid overlay toggle
                 Button {
                     showGridOverlay.toggle()

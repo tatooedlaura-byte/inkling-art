@@ -128,6 +128,7 @@ struct ContentView: View {
                 ToolbarView(selectedTool: $currentTool,
                            selectedShapeKind: $currentShapeKind,
                            shapeFilled: $shapeFilled,
+                           showLayerPanel: $showLayerPanel,
                            canvasMode: canvasMode)
                     .padding(.leading, 12)
 

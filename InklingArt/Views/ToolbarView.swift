@@ -5,6 +5,7 @@ struct ToolbarView: View {
     @Binding var selectedTool: Tool
     @Binding var selectedShapeKind: ShapeKind
     @Binding var shapeFilled: Bool
+    @Binding var showLayerPanel: Bool
     var canvasMode: CanvasMode = .pixel
     @State private var showShapePicker = false
 
@@ -26,6 +27,20 @@ struct ToolbarView: View {
                                 .cornerRadius(10)
                         }
                     }
+                }
+            }
+
+            // Layers button (smooth mode only)
+            if canvasMode == .smooth {
+                Button {
+                    showLayerPanel.toggle()
+                } label: {
+                    Image(systemName: "square.3.layers.3d")
+                        .font(.title2)
+                        .frame(width: 44, height: 44)
+                        .background(showLayerPanel ? Color.accentColor : Color(.systemGray5))
+                        .foregroundColor(showLayerPanel ? .white : .primary)
+                        .cornerRadius(10)
                 }
             }
         }
