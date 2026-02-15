@@ -105,3 +105,143 @@ A new creative mode where users can drag preset geometric shapes onto the canvas
 - Tangram canvas view
 - Shape library UI component
 - Update CanvasMode enum if new mode
+
+---
+
+# Future Canvas Mode Ideas
+
+Creative and experimental canvas types to explore.
+
+## Symmetry/Kaleidoscope Canvases
+
+### Mandala Mode
+- Draw in one wedge section, auto-mirrors to create radial symmetry
+- Adjustable number of mirror axes (4, 6, 8, 12, etc.)
+- Instant symmetrical patterns
+- Perfect for meditative drawing and decorative art
+
+**Implementation**: Track strokes in one wedge, duplicate and rotate around center point
+
+### Kaleidoscope Canvas
+- Everything you draw reflects in real-time kaleidoscope patterns
+- Multiple reflection axes create mesmerizing effects
+- Adjustable number of reflections and angles
+
+**Implementation**: Similar to mandala but with more complex reflection patterns
+
+---
+
+## Physics-Based Canvases
+
+### Sand Art Mode
+- "Pour" colored sand that falls and settles realistically
+- Tilt iPad to shift sand around (use accelerometer)
+- Layer different colors to create sand art compositions
+- Optional: shake to mix/reset
+
+**Implementation**: Particle system with gravity simulation, collision detection
+
+### Watercolor Simulation
+- Realistic wet-on-wet bleeding and color mixing
+- Paint spreads and blends based on "wetness"
+- Water droplets push paint around
+- Colors mix naturally
+
+**Implementation**: Fluid simulation, alpha blending, diffusion algorithms
+
+### Spray Paint Mode
+- Pressure-sensitive spray density
+- Drips that run down over time
+- Different nozzle sizes
+- Layering with transparency
+- Graffiti/street art aesthetic
+
+**Implementation**: Particle spray system, drip physics, pressure curve mapping
+
+---
+
+## Pattern/Math Canvases
+
+### Spirograph Mode
+- Mathematical curve drawing with rotating circles
+- Adjust inner/outer circle sizes and rotation ratios
+- Creates satisfying geometric patterns
+- Real-time preview as you adjust parameters
+
+**Implementation**: Parametric equations for epicycloids and hypocycloids
+
+### String Art Mode
+- Place "pins" around the canvas edge or anywhere
+- Connect pins with colored "strings"
+- Creates geometric line patterns
+- Like traditional nail-and-string artworks
+
+**Implementation**: Pin placement, line rendering between points, layering
+
+### Tessellation Canvas
+- Draw a shape that automatically tiles seamlessly
+- Create repeating patterns like M.C. Escher
+- Adjust tile boundaries to see pattern updates
+- Different tiling patterns (square, hexagonal, triangular)
+
+**Implementation**: Shape transformations to ensure edge matching, tiling engine
+
+---
+
+## Reveal/Texture Canvases
+
+### Scratch Art Mode
+- Black surface covering rainbow colors (or custom color) underneath
+- "Scratch away" the top layer to reveal colors below
+- Like scratch-off cards or scratchboard art
+- Different scratch widths
+
+**Implementation**: Two-layer system - top mask layer, bottom color layer, eraser reveals bottom
+
+### Light Painting Mode
+- Draw glowing light trails that fade over time
+- Long-exposure photography effect
+- Trails blur and diminish gradually
+- Different glow colors and intensities
+
+**Implementation**: Trail rendering with alpha fade over time, glow/blur effects
+
+### Origami Fold Mode
+- Simulate paper folding
+- Cut shapes while "folded"
+- Unfold to reveal symmetrical designs
+- Like making paper snowflakes digitally
+
+**Implementation**: Virtual folding state machine, symmetry based on fold pattern
+
+---
+
+## Experimental/Text-Based
+
+### ASCII Art Canvas
+- Draw with text characters instead of pixels
+- Different characters represent different densities/shades
+- Retro computer art aesthetic
+- Adjustable character size and font
+
+**Implementation**: Convert brush strokes to character density, monospace font rendering
+
+---
+
+## Implementation Priority Considerations
+
+**Easiest to Implement:**
+1. Mandala Mode (symmetry is straightforward)
+2. Scratch Art Mode (two-layer reveal)
+3. Spirograph Mode (mathematical curves)
+
+**Medium Complexity:**
+1. String Art Mode
+2. Light Painting Mode (fade effects)
+3. ASCII Art Canvas
+
+**Most Complex:**
+1. Watercolor Simulation (fluid dynamics)
+2. Sand Art Mode (particle physics)
+3. Spray Paint Mode (drip physics)
+4. Tessellation Canvas (edge matching algorithms)
